@@ -1,6 +1,6 @@
 # PB-BI 数据分析平台
 
-一个基于 React + FastAPI 的商业智能软件，用于连接明道云数据源，进行数据提取、处理、分析和可视化展示。
+可以用明道云的BI平台 - 一个基于 React + FastAPI 的商业智能软件，用于连接明道云数据源，进行数据提取、处理、分析和可视化展示。
 
 ## 功能特性
 
@@ -57,8 +57,8 @@
 
 1. **克隆项目**
 ```bash
-git clone <repository-url>
-cd PB-BI
+git clone https://github.com/ceasarboy/nedi-BI.git
+cd nedi-BI
 ```
 
 2. **安装后端依赖**
@@ -107,7 +107,7 @@ chmod +x scripts/start.sh
 ## 项目结构
 
 ```
-PB-BI/
+nedi-BI/
 ├── config/              # 配置文件
 ├── docs/               # 文档
 ├── frontend/           # 前端项目
