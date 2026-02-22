@@ -14,6 +14,9 @@ git commit -m "Initial commit - PB-BI data analysis platform"
 echo Setting branch to main...
 git branch -M main
 
+echo Pulling from remote...
+git pull origin main --allow-unrelated-histories --no-edit
+
 echo Pushing to GitHub...
 git push -u origin main
 
