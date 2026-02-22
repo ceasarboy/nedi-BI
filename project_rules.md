@@ -554,6 +554,114 @@ async def get_data_flows(
 
 ---
 
+## 迭代 3.4 经验总结（便携版生成）
+
+### 本次迭代遇到的问题
+
+1. ❌ CORS配置只允许localhost:3000，便携版在其他机器无法使用
+2. ❌ serve包安装不完整，缺少build目录
+3. ❌ 前端启动脚本路径错误
+
+### 经验教训
+
+#### 1. 便携版CORS配置要点 ⭐重要
+**问题**：CORS配置只允许`http://localhost:3000`，便携版在其他IP访问时跨域失败
+
+**解决方案**：使用正则表达式匹配任何端口3000的origin
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"http://.*:3000|http://localhost:3000",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+**教训**：便携版可能在任何网络环境下运行，CORS配置必须支持动态origin
+
+#### 2. serve包安装要点 ⭐重要
+**问题**：npm install -g serve时，有时只安装元数据，不安装build目录
+
+**解决方案**：
+```powershell
+# 方法1：指定prefix安装
+npm install -g serve --prefix ./npm-global
+
+# 方法2：进入目录安装
+cd npm-global
+npm install serve
+```
+
+**验证**：安装后必须检查`node_modules/serve/build/main.js`是否存在
+
+#### 3. 前端启动脚本要点
+**问题**：serve.cmd脚本使用相对路径，在便携版中可能找不到node.exe
+
+**解决方案**：直接使用node.exe执行serve的main.js
+```batch
+"%SCRIPT_DIR%runtime\node\node.exe" "%SCRIPT_DIR%runtime\npm-global\node_modules\serve\build\main.js" -s . -l 3000
+```
+
+#### 4. 便携版目录结构要点
+**正确的目录结构**：
+```
+pb-bi-portable/
+├── backend/
+│   ├── src/           # 后端代码
+│   ├── libs/          # Python依赖
+│   └── requirements.txt
+├── frontend/
+│   ├── index.html     # 前端入口
+│   └── assets/        # 前端资源
+├── runtime/
+│   ├── python/        # Python便携版
+│   │   └── python311._pth  # 必须配置正确
+│   ├── node/          # Node.js便携版
+│   └── npm-global/
+│       └── node_modules/serve/build/main.js  # 必须存在
+├── start.bat
+├── start-backend.bat
+├── start-frontend.bat
+└── stop.bat
+```
+
+#### 5. Python便携版配置要点
+**python311._pth文件配置**：
+```
+python311.zip
+.
+libs
+../../backend/libs
+Scripts
+
+import site
+```
+**注意**：必须添加`import site`才能使用pip
+
+### 改进建议（补充）
+
+123. **便携版验证脚本**：建议创建验证脚本，检查所有必需文件是否存在
+124. **便携版测试流程**：每次生成便携版后，在干净环境测试
+125. **依赖版本锁定**：建议锁定Python和Node.js版本号
+
+---
+
+## ⚠️ 重要提醒：执行计划前请先温习经验教训
+
+在开始任何任务之前，请先执行以下步骤：
+
+1. **阅读project_rules.md**：搜索是否有类似任务的经验教训
+2. **检查历史问题**：查看是否遇到过类似问题及解决方案
+3. **避免重复踩坑**：应用之前的经验教训，避免犯同样的错误
+
+**搜索关键词示例**：
+- 便携版 → 搜索"便携版"、"CORS"、"serve"
+- 认证 → 搜索"认证"、"session"、"bcrypt"
+- 数据库 → 搜索"数据库"、"migration"、"user_id"
+
+---
+
 ## 版本历史
 
 | 版本 | 日期 | 迭代 | 说明 |
@@ -562,4 +670,5 @@ async def get_data_flows(
 | 2.13 | 2026-02-22 | 迭代 2.13 | 记录迭代 2.13 经验教训，第一阶段完成总结 |
 | 3.0 | 2026-02-22 | 迭代 3.0 | 记录迭代 3.0 经验教训，可部署版本生成完成 |
 | 3.2 | 2026-02-22 | 迭代 3.2 | 记录迭代 3.2 经验教训，用户认证模块完成 |
-| 3.3 | 2026-02-22 | 迭代 3.3 | 记录迭代 3.3 经验教训，UI/UX优化完成
+| 3.3 | 2026-02-22 | 迭代 3.3 | 记录迭代 3.3 经验教训，UI/UX优化完成 |
+| 3.4 | 2026-02-22 | 迭代 3.4 | 记录迭代 3.4 经验教训，便携版生成问题修复
