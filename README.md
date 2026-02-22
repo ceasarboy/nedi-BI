@@ -104,6 +104,39 @@ chmod +x scripts/start.sh
 
 详见 [DEPLOYMENT.md](./DEPLOYMENT.md)
 
+## 生成便携版（可选）
+
+如果需要生成不依赖系统环境的便携版，可以运行打包脚本：
+
+```bash
+# Windows
+scripts\package-full.bat
+```
+
+生成的便携版将包含：
+- Python 3.11 便携版
+- Node.js 20 便携版
+- 所有 Python 依赖
+- 预构建的前端
+- 配置文件示例
+
+便携版可以直接复制到任何 Windows 机器运行，无需安装 Python 和 Node.js。
+
+### 便携版配置
+
+便携版支持通过 `config.ini` 自定义配置：
+
+1. 复制 `config.example.ini` 为 `config.ini`
+2. 根据需要修改配置值
+3. 重启服务
+
+支持的配置项：
+- Python/Node.js 运行时路径
+- 依赖库路径
+- 端口配置
+- API 地址
+- 后端绑定地址
+
 ## 项目结构
 
 ```
@@ -117,13 +150,14 @@ nedi-BI/
 │   │   ├── pages/     # 页面组件
 │   │   └── services/  # API服务
 │   └── package.json
-├── scripts/            # 启动脚本
+├── scripts/            # 启动脚本和打包脚本
 ├── src/                # 后端源代码
 │   ├── api/           # API路由
 │   ├── core/          # 核心配置
 │   ├── models/        # 数据模型
 │   └── services/      # 业务服务
 ├── requirements.txt    # Python依赖
+├── config.example.ini  # 便携版配置示例
 └── DEPLOYMENT.md      # 部署说明
 ```
 
