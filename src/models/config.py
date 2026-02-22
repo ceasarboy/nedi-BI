@@ -7,6 +7,7 @@ class DataFlow(Base):
     __tablename__ = "data_flows"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String, nullable=False)
     type = Column(String, nullable=False, default="mingdao")  # 'mingdao' or 'local'
     appkey = Column(String, nullable=True)
@@ -35,6 +36,7 @@ class DataSnapshot(Base):
     __tablename__ = "data_snapshots"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     data_flow_id = Column(Integer, ForeignKey("data_flows.id"), nullable=False)
     name = Column(String, nullable=False)
     worksheet_id = Column(String, nullable=False)
@@ -48,6 +50,7 @@ class Dashboard(Base):
     __tablename__ = "dashboards"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String, nullable=False)
     data_snapshot_id = Column(Integer, ForeignKey("data_snapshots.id"), nullable=True)
     chart_type = Column(String, nullable=False, default="line")

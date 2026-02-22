@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -10,6 +10,7 @@ from datetime import datetime
 from src.core.database import get_db
 from src.models.config import DataFlow, FieldType, DataSnapshot
 from src.services.mingdao import MingDaoService
+from src.core.permissions import get_current_user, check_resource_access, filter_by_user_permission
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
@@ -41,10 +42,16 @@ class DataSnapshotResponse(BaseModel):
         from_attributes = True
 
 @router.get("/{dataflow_id}/fields")
-async def get_fields(dataflow_id: int, db: Session = Depends(get_db)):
+async def get_fields(
+    dataflow_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     service = MingDaoService(dataflow.appkey, dataflow.sign)
     try:
@@ -54,10 +61,16 @@ async def get_fields(dataflow_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"获取字段失败: {str(e)}")
 
 @router.get("/{dataflow_id}/enabled-fields")
-async def get_enabled_fields(dataflow_id: int, db: Session = Depends(get_db)):
+async def get_enabled_fields(
+    dataflow_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     saved_fields = db.query(FieldType).filter(
         FieldType.data_flow_id == dataflow_id,
@@ -75,10 +88,16 @@ async def get_enabled_fields(dataflow_id: int, db: Session = Depends(get_db)):
     return {"success": True, "data": response_fields}
 
 @router.post("/query")
-async def query_data(request: DataQueryRequest, db: Session = Depends(get_db)):
+async def query_data(
+    request: DataQueryRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == request.dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     service = MingDaoService(dataflow.appkey, dataflow.sign)
     
@@ -126,9 +145,17 @@ async def query_data(request: DataQueryRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"查询数据失败: {str(e)}")
 
 @router.get("/snapshots")
-async def get_all_snapshots(page: int = 1, page_size: int = 10, db: Session = Depends(get_db)):
+async def get_all_snapshots(
+    page: int = 1,
+    page_size: int = 10,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     offset = (page - 1) * page_size
-    snapshots = db.query(DataSnapshot).order_by(DataSnapshot.created_at.desc()).offset(offset).limit(page_size).all()
+    query = db.query(DataSnapshot)
+    query = filter_by_user_permission(query, user, DataSnapshot.user_id)
+    snapshots = query.order_by(DataSnapshot.created_at.desc()).offset(offset).limit(page_size).all()
     
     return {
         "success": True,
@@ -145,15 +172,29 @@ async def get_all_snapshots(page: int = 1, page_size: int = 10, db: Session = De
     }
 
 @router.get("/snapshots/count")
-async def get_snapshots_count(db: Session = Depends(get_db)):
-    count = db.query(DataSnapshot).count()
+async def get_snapshots_count(
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    query = db.query(DataSnapshot)
+    query = filter_by_user_permission(query, user, DataSnapshot.user_id)
+    count = query.count()
     return {"success": True, "data": {"count": count}}
 
 @router.get("/{dataflow_id}/snapshots")
-async def get_snapshots(dataflow_id: int, page: int = 1, page_size: int = 10, db: Session = Depends(get_db)):
+async def get_snapshots(
+    dataflow_id: int,
+    page: int = 1,
+    page_size: int = 10,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     offset = (page - 1) * page_size
     snapshots = db.query(DataSnapshot).filter(
@@ -174,17 +215,24 @@ async def get_snapshots(dataflow_id: int, page: int = 1, page_size: int = 10, db
     }
 
 @router.post("/snapshots")
-async def create_snapshot(snapshot: DataSnapshotCreate, db: Session = Depends(get_db)):
+async def create_snapshot(
+    snapshot: DataSnapshotCreate,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     worksheet_id = None
     if snapshot.dataflow_id > 0:
         dataflow = db.query(DataFlow).filter(DataFlow.id == snapshot.dataflow_id).first()
         if not dataflow:
             raise HTTPException(status_code=404, detail="数据流不存在")
+        check_resource_access(user, dataflow.user_id, "数据流")
         worksheet_id = dataflow.worksheet_id
     else:
         worksheet_id = f"aggregate_{int(datetime.now().timestamp())}"
     
     db_snapshot = DataSnapshot(
+        user_id=user.id,
         data_flow_id=snapshot.dataflow_id,
         name=snapshot.name,
         worksheet_id=worksheet_id,
@@ -205,10 +253,16 @@ async def create_snapshot(snapshot: DataSnapshotCreate, db: Session = Depends(ge
     }
 
 @router.get("/snapshots/{snapshot_id}")
-async def get_snapshot(snapshot_id: int, db: Session = Depends(get_db)):
+async def get_snapshot(
+    snapshot_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     snapshot = db.query(DataSnapshot).filter(DataSnapshot.id == snapshot_id).first()
     if not snapshot:
         raise HTTPException(status_code=404, detail="快照不存在")
+    check_resource_access(user, snapshot.user_id, "快照")
     
     try:
         fields = json.loads(snapshot.fields)
@@ -237,10 +291,16 @@ async def get_snapshot(snapshot_id: int, db: Session = Depends(get_db)):
     }
 
 @router.delete("/snapshots/{snapshot_id}")
-async def delete_snapshot(snapshot_id: int, db: Session = Depends(get_db)):
+async def delete_snapshot(
+    snapshot_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     snapshot = db.query(DataSnapshot).filter(DataSnapshot.id == snapshot_id).first()
     if not snapshot:
         raise HTTPException(status_code=404, detail="快照不存在")
+    check_resource_access(user, snapshot.user_id, "快照")
     
     db.delete(snapshot)
     db.commit()
@@ -252,12 +312,15 @@ async def import_local_file(
     file: UploadFile = File(...),
     dataflow_id: int = Form(...),
     name: Optional[str] = Form(None),
-    db: Session = Depends(get_db)
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
 ):
     try:
         dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
         if not dataflow:
             raise HTTPException(status_code=404, detail="数据流不存在")
+        check_resource_access(user, dataflow.user_id, "数据流")
         
         contents = await file.read()
         file_extension = file.filename.split('.')[-1].lower() if '.' in file.filename else ''
@@ -311,6 +374,7 @@ async def import_local_file(
             db.add(field_type)
         
         db_snapshot = DataSnapshot(
+            user_id=user.id,
             data_flow_id=dataflow_id,
             name=snapshot_name,
             worksheet_id=worksheet_id,

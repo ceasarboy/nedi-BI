@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -16,6 +16,7 @@ from statsmodels.stats.stattools import jarque_bera
 
 from src.core.database import get_db
 from src.models.config import DataSnapshot
+from src.core.permissions import get_current_user, check_resource_access
 
 router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 
@@ -151,7 +152,12 @@ class MonteCarloQueueRequest(BaseModel):
     simulation_count: int = 1000
 
 @router.post("/aggregate")
-async def aggregate_data(request: AggregateRequest, db: Session = Depends(get_db)):
+async def aggregate_data(
+    request: AggregateRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     try:
         snapshots = db.query(DataSnapshot).filter(
             DataSnapshot.id.in_(request.snapshot_ids)
@@ -159,6 +165,9 @@ async def aggregate_data(request: AggregateRequest, db: Session = Depends(get_db
         
         if len(snapshots) < 2:
             raise HTTPException(status_code=400, detail="至少需要选择2个数据快照")
+        
+        for snapshot in snapshots:
+            check_resource_access(user, snapshot.user_id, "快照")
         
         dfs = []
         all_fields = []
@@ -308,7 +317,12 @@ async def custom_calculation(request: CustomCalcRequest, db: Session = Depends(g
         raise HTTPException(status_code=500, detail=f"计算失败: {str(e)}")
 
 @router.post("/statistical")
-async def statistical_analysis(request: StatisticalRequest, db: Session = Depends(get_db)):
+async def statistical_analysis(
+    request: StatisticalRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     """统计描述分析"""
     try:
         snapshot = db.query(DataSnapshot).filter(
@@ -317,6 +331,8 @@ async def statistical_analysis(request: StatisticalRequest, db: Session = Depend
         
         if not snapshot:
             raise HTTPException(status_code=404, detail="快照不存在")
+        
+        check_resource_access(user, snapshot.user_id, "快照")
         
         data = json.loads(snapshot.data)
         df = pd.DataFrame(data)
@@ -445,7 +461,12 @@ async def statistical_analysis(request: StatisticalRequest, db: Session = Depend
         raise HTTPException(status_code=500, detail=f"统计分析失败: {str(e)}")
 
 @router.post("/distribution")
-async def distribution_fit(request: DistributionRequest, db: Session = Depends(get_db)):
+async def distribution_fit(
+    request: DistributionRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     """分布拟合分析"""
     try:
         snapshot = db.query(DataSnapshot).filter(
@@ -454,6 +475,8 @@ async def distribution_fit(request: DistributionRequest, db: Session = Depends(g
         
         if not snapshot:
             raise HTTPException(status_code=404, detail="快照不存在")
+        
+        check_resource_access(user, snapshot.user_id, "快照")
         
         data = json.loads(snapshot.data)
         df = pd.DataFrame(data)
@@ -640,7 +663,12 @@ async def distribution_fit(request: DistributionRequest, db: Session = Depends(g
         raise HTTPException(status_code=500, detail=f"分布拟合分析失败: {str(e)}")
 
 @router.post("/regression")
-async def regression_analysis(request: RegressionRequest, db: Session = Depends(get_db)):
+async def regression_analysis(
+    request: RegressionRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     """回归分析"""
     try:
         snapshot = db.query(DataSnapshot).filter(
@@ -649,6 +677,8 @@ async def regression_analysis(request: RegressionRequest, db: Session = Depends(
         
         if not snapshot:
             raise HTTPException(status_code=404, detail="快照不存在")
+        
+        check_resource_access(user, snapshot.user_id, "快照")
         
         data = json.loads(snapshot.data)
         df = pd.DataFrame(data)
@@ -887,7 +917,12 @@ async def regression_analysis(request: RegressionRequest, db: Session = Depends(
         raise HTTPException(status_code=500, detail=f"回归分析失败: {str(e)}")
 
 @router.post("/correlation")
-async def correlation_analysis(request: CorrelationRequest, db: Session = Depends(get_db)):
+async def correlation_analysis(
+    request: CorrelationRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     """相关分析"""
     try:
         snapshot = db.query(DataSnapshot).filter(
@@ -896,6 +931,8 @@ async def correlation_analysis(request: CorrelationRequest, db: Session = Depend
         
         if not snapshot:
             raise HTTPException(status_code=404, detail="快照不存在")
+        
+        check_resource_access(user, snapshot.user_id, "快照")
         
         data = json.loads(snapshot.data)
         df = pd.DataFrame(data)
@@ -1065,7 +1102,12 @@ async def monte_carlo_analysis(request: MonteCarloRequest, db: Session = Depends
         raise HTTPException(status_code=500, detail=f"蒙特卡洛分析失败: {str(e)}")
 
 @router.post("/multi-correlation")
-async def multi_correlation_analysis(request: MultiCorrelationRequest, db: Session = Depends(get_db)):
+async def multi_correlation_analysis(
+    request: MultiCorrelationRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     """多数据流字段相关分析"""
     try:
         if len(request.fields) < 2:
@@ -1086,6 +1128,8 @@ async def multi_correlation_analysis(request: MultiCorrelationRequest, db: Sessi
             
             if not snapshot:
                 raise HTTPException(status_code=404, detail=f"快照 {field_req.snapshot_id} 不存在")
+            
+            check_resource_access(user, snapshot.user_id, "快照")
             
             # 读取数据
             data = json.loads(snapshot.data)
@@ -1169,7 +1213,12 @@ async def multi_correlation_analysis(request: MultiCorrelationRequest, db: Sessi
 
 
 @router.post("/correlation-explore")
-async def correlation_explore(request: CorrelationExploreRequest, db: Session = Depends(get_db)):
+async def correlation_explore(
+    request: CorrelationExploreRequest,
+    fastapi_request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     """相关性探索：两两字段组合分析，提取高相关对"""
     try:
         if len(request.fields) < 2:
@@ -1190,6 +1239,8 @@ async def correlation_explore(request: CorrelationExploreRequest, db: Session = 
             
             if not snapshot:
                 raise HTTPException(status_code=404, detail=f"快照 {field_req.snapshot_id} 不存在")
+            
+            check_resource_access(user, snapshot.user_id, "快照")
             
             # 读取数据
             data = json.loads(snapshot.data)

@@ -282,10 +282,284 @@ cd f:\PB-BI\frontend; npm run build
 
 ---
 
+## 迭代 3.2 经验总结（用户认证模块）
+
+### 本次迭代完成的功能
+1. ✅ 用户认证系统设计（登录/注册、权限控制、角色管理）
+2. ✅ 数据库模型设计（User模型、现有模型添加user_id外键）
+3. ✅ 密码加密与验证（bcrypt）
+4. ✅ 会话管理（Starlette SessionMiddleware）
+5. ✅ 权限检查装饰器（admin可查看所有数据，普通用户只看自己数据）
+6. ✅ 后端认证API（注册、登录、登出、获取用户信息）
+7. ✅ 后端权限控制（所有API端点添加权限检查）
+8. ✅ 前端认证服务和上下文
+9. ✅ 前端登录/注册页面和组件
+10. ✅ 前端路由保护
+11. ✅ 内置admin用户自动初始化
+12. ✅ 代码审查和修复
+
+### 经验教训
+
+#### 1. 用户认证系统的设计要点 ⭐重要
+**经验**：
+- 角色设计：内置admin角色，普通用户可注册
+- 权限控制：admin可查看所有数据，普通用户只看自己的数据
+- 数据隔离：所有业务模型（DataFlow、DataSnapshot、Dashboard）都要关联user_id
+- 会话管理：使用SessionMiddleware管理用户会话
+- 密码安全：使用bcrypt加密存储密码，不存储明文
+
+**权限检查逻辑**：
+```python
+def can_access_resource(user: User, resource_user_id: int) -> bool:
+    if user.role == "admin":
+        return True
+    return user.id == resource_user_id
+```
+
+#### 2. 会话管理库的选择 ⭐重要
+**问题**：最初选择fastapi-session库，但遇到兼容性问题
+**解决**：改用Starlette自带的SessionMiddleware，更稳定可靠
+**经验**：
+- Starlette的SessionMiddleware是内置的，无需额外安装
+- 配置简单，只需设置secret_key
+- 与FastAPI完美兼容
+- 避免了第三方库的版本兼容性问题
+
+**正确配置示例**：
+```python
+from starlette.middleware.sessions import SessionMiddleware
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    session_cookie="pbbi_session",
+    max_age=86400 * 7  # 7天
+)
+```
+
+#### 3. 数据库模型外键关联设计
+**经验**：
+- 所有业务模型都要添加user_id外键
+- 使用ForeignKey关联User模型
+- 设置ondelete="CASCADE"，删除用户时级联删除相关数据
+- 添加索引提升查询性能
+
+**模型设计示例**：
+```python
+class DataFlow(Base):
+    __tablename__ = "data_flows"
+    # ... 其他字段 ...
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user = relationship("User", back_populates="data_flows")
+```
+
+#### 4. 前端认证上下文设计
+**经验**：
+- 使用React Context管理认证状态
+- 提供useAuth钩子方便组件访问认证信息
+- 使用ProtectedRoute组件保护需要登录的路由
+- 未登录用户自动跳转到登录页
+- 登录状态持久化（可选）
+
+**认证上下文设计**：
+```javascript
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const login = async (username, password) => { ... };
+  const register = async (username, password) => { ... };
+  const logout = async () => { ... };
+  
+  return (
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+```
+
+#### 5. 密码安全最佳实践
+**经验**：
+- 使用bcrypt进行密码哈希
+- 哈希轮数设置为12（平衡安全性和性能）
+- 不存储明文密码
+- 密码验证时使用bcrypt.checkpw
+- 注册时检查用户名唯一性
+
+**密码处理示例**：
+```python
+import bcrypt
+
+def hash_password(password: str) -> str:
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+def verify_password(password: str, password_hash: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+```
+
+#### 6. 内置admin用户的自动初始化
+**经验**：
+- 应用启动时检查admin用户是否存在
+- 不存在则自动创建
+- admin用户名和密码可通过配置文件设置
+- 首次登录后建议修改admin密码
+
+**初始化示例**：
+```python
+@app.on_event("startup")
+async def startup_event():
+    await init_admin_user()
+```
+
+#### 7. API权限控制的实现方式
+**经验**：
+- 使用依赖注入获取当前用户
+- 每个API端点都要检查权限
+- admin用户可以访问所有资源
+- 普通用户只能访问自己的资源
+- 查询时添加user_id过滤条件
+
+**权限检查示例**：
+```python
+@router.get("/data-flows")
+async def get_data_flows(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    query = db.query(DataFlow)
+    if current_user.role != "admin":
+        query = query.filter(DataFlow.user_id == current_user.id)
+    return query.all()
+```
+
+#### 8. ACP流程的完整执行 ⭐重要
+**经验**：
+- 本次迭代完整执行了ACP流程：
+  1. 架构师：更新需求分析和架构设计
+  2. 项目经理：更新开发计划
+  3. 开发人员：实现用户认证模块
+  4. 代码审查人员：审查代码
+  5. ACP专家：总结经验教训
+- 流程确保了开发质量和进度
+- 每个环节都有明确的输出文档
+
+### 改进建议（补充）
+
+109. **双因素认证改进**：建议添加双因素认证（2FA）提升安全性
+110. **密码重置改进**：建议添加密码重置功能（通过邮箱或短信）
+111. **用户管理改进**：admin用户可以管理其他用户（禁用、删除等）
+112. **权限细化改进**：建议添加更细粒度的权限控制（如只读、编辑等）
+113. **审计日志改进**：建议添加用户操作审计日志
+114. **会话超时改进**：建议添加会话超时自动登出功能
+115. **CSRF保护改进**：建议添加CSRF保护
+116. **Rate Limiting改进**：建议添加API限流防止暴力破解
+
+---
+
+## 迭代 3.3 经验总结（UI/UX优化）
+
+### 本次迭代完成的功能
+1. ✅ 设计商业数据分析项目的配色方案和设计系统
+2. ✅ 优化登录页面设计（左右分栏布局、品牌展示）
+3. ✅ 优化导航栏样式（白色简约风格）
+4. ✅ 优化按钮和表单样式（统一圆角、阴影、过渡动画）
+5. ✅ 优化页面容器样式（更大圆角、更柔和阴影）
+
+### 经验教训
+
+#### 1. 商业数据分析软件的配色要点 ⭐重要
+**经验**：
+- 主色调选择蓝色系（#2563eb），传达专业、信任的感觉
+- 辅助色使用紫色渐变（#667eea → #764ba2），增加现代感
+- 中性色使用灰色系，确保良好的可读性
+- 避免过于鲜艳的颜色，保持专业稳重的风格
+
+**配色方案**：
+```css
+--primary: #2563eb;          /* 主色 - 蓝色 */
+--bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+--text-primary: #111827;     /* 深灰 - 正文 */
+--text-secondary: #4b5563;   /* 中灰 - 辅助文字 */
+--bg-primary: #f3f4f6;       /* 浅灰 - 背景 */
+```
+
+#### 2. 登录页面的设计要点 ⭐重要
+**经验**：
+- 采用左右分栏布局，左侧展示品牌信息，右侧是登录表单
+- 左侧使用渐变背景，右侧使用白色卡片，形成鲜明对比
+- 品牌展示区包含：logo、产品名称、标语、数据统计
+- 登录/注册切换采用标签页式设计，视觉清晰
+- 登录按钮使用渐变背景，悬停时上浮效果
+
+**布局结构**：
+```
+┌───────────────────────────────────────────┐
+│  渐变背景 (左侧)  │  白色卡片 (右侧)    │
+│                    │                      │
+│  • Logo            │  • 登录/注册切换   │
+│  • 产品名称        │  • 登录表单        │
+│  • 标语            │  • 注册表单        │
+│  • 数据统计        │  • 管理员账号提示 │
+│                    │                      │
+└───────────────────────────────────────────┘
+```
+
+#### 3. 导航栏的设计要点
+**经验**：
+- 从彩色渐变改为白色简约风格，更显专业
+- 添加底部边框，与内容区形成清晰分隔
+- 导航链接采用标签页式设计，激活状态使用主色
+- 品牌logo使用渐变色块，提升识别度
+
+#### 4. 按钮和表单的设计要点
+**经验**：
+- 按钮使用渐变背景，悬停时上浮并增强阴影
+- 表单输入框使用圆角设计，聚焦时显示蓝色边框和阴影
+- 统一使用rem单位，确保响应式一致性
+- 过渡动画时间控制在200ms，既流畅又不拖沓
+
+#### 5. CSS变量的使用要点
+**经验**：
+- 定义完整的设计系统变量（颜色、圆角、阴影、过渡）
+- 统一使用变量，便于后续主题切换
+- 变量命名清晰，易于理解和维护
+
+**变量示例**：
+```css
+--radius-sm: 6px;
+--radius-md: 10px;
+--radius-lg: 14px;
+--radius-xl: 20px;
+--transition-fast: 150ms;
+--transition-base: 200ms;
+--transition-slow: 300ms;
+```
+
+#### 6. 内联样式vs CSS类的权衡
+**经验**：
+- 登录页面使用内联样式，便于快速迭代和调整
+- 通用组件使用CSS类，确保样式复用和一致性
+- 根据具体场景选择合适的方式，不必拘泥于一种
+
+### 改进建议（补充）
+
+117. **图标系统改进**：建议引入一致的图标库（如Heroicons或Lucide）
+118. **主题切换改进**：建议添加深色/浅色主题切换功能
+119. **响应式优化改进**：建议完善移动端响应式布局
+120. **加载状态改进**：建议添加骨架屏加载状态
+121. **动画系统改进**：建议统一页面切换和交互动画
+122. **设计文档改进**：建议创建组件库和设计系统文档
+
+---
+
 ## 版本历史
 
 | 版本 | 日期 | 迭代 | 说明 |
 |------|------|------|------|
 | 1.0 | 2026-02-14 | 迭代 1.1 | 初始版本，记录迭代 1.1 的经验教训 |
 | 2.13 | 2026-02-22 | 迭代 2.13 | 记录迭代 2.13 经验教训，第一阶段完成总结 |
-| 3.0 | 2026-02-22 | 迭代 3.0 | 记录迭代 3.0 经验教训，可部署版本生成完成
+| 3.0 | 2026-02-22 | 迭代 3.0 | 记录迭代 3.0 经验教训，可部署版本生成完成 |
+| 3.2 | 2026-02-22 | 迭代 3.2 | 记录迭代 3.2 经验教训，用户认证模块完成 |
+| 3.3 | 2026-02-22 | 迭代 3.3 | 记录迭代 3.3 经验教训，UI/UX优化完成

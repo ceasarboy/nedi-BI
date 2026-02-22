@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -10,6 +10,7 @@ from datetime import datetime
 from src.core.database import get_db
 from src.models.config import DataFlow, FieldType, DataSnapshot
 from src.services.mingdao import MingDaoService
+from src.core.permissions import get_current_user, check_resource_access, filter_by_user_permission
 
 router = APIRouter(prefix="/api/dataflows", tags=["dataflows"])
 
@@ -51,26 +52,52 @@ class PaginationRequest(BaseModel):
     page_size: int = 10
 
 @router.get("", response_model=List[DataFlowResponse])
-async def get_dataflows(page: int = 1, page_size: int = 10, db: Session = Depends(get_db)):
+async def get_dataflows(
+    page: int = 1,
+    page_size: int = 10,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     offset = (page - 1) * page_size
-    dataflows = db.query(DataFlow).order_by(DataFlow.created_at.desc()).offset(offset).limit(page_size).all()
+    query = db.query(DataFlow)
+    query = filter_by_user_permission(query, user, DataFlow.user_id)
+    dataflows = query.order_by(DataFlow.created_at.desc()).offset(offset).limit(page_size).all()
     return dataflows
 
 @router.get("/count")
-async def get_dataflows_count(db: Session = Depends(get_db)):
-    count = db.query(DataFlow).count()
+async def get_dataflows_count(
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    query = db.query(DataFlow)
+    query = filter_by_user_permission(query, user, DataFlow.user_id)
+    count = query.count()
     return {"success": True, "data": {"count": count}}
 
 @router.get("/{dataflow_id}", response_model=DataFlowResponse)
-async def get_dataflow(dataflow_id: int, db: Session = Depends(get_db)):
+async def get_dataflow(
+    dataflow_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     return dataflow
 
 @router.post("", response_model=DataFlowResponse)
-async def create_dataflow(dataflow: DataFlowCreate, db: Session = Depends(get_db)):
+async def create_dataflow(
+    dataflow: DataFlowCreate,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     db_dataflow = DataFlow(
+        user_id=user.id,
         name=dataflow.name,
         type=dataflow.type,
         appkey=dataflow.appkey,
@@ -83,10 +110,17 @@ async def create_dataflow(dataflow: DataFlowCreate, db: Session = Depends(get_db
     return db_dataflow
 
 @router.put("/{dataflow_id}", response_model=DataFlowResponse)
-async def update_dataflow(dataflow_id: int, dataflow_update: DataFlowUpdate, db: Session = Depends(get_db)):
+async def update_dataflow(
+    dataflow_id: int,
+    dataflow_update: DataFlowUpdate,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     update_data = dataflow_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -97,20 +131,32 @@ async def update_dataflow(dataflow_id: int, dataflow_update: DataFlowUpdate, db:
     return dataflow
 
 @router.delete("/{dataflow_id}")
-async def delete_dataflow(dataflow_id: int, db: Session = Depends(get_db)):
+async def delete_dataflow(
+    dataflow_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     db.delete(dataflow)
     db.commit()
     return {"success": True, "message": "删除成功"}
 
 @router.post("/{dataflow_id}/test")
-async def test_dataflow_connection(dataflow_id: int, db: Session = Depends(get_db)):
+async def test_dataflow_connection(
+    dataflow_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     service = MingDaoService(dataflow.appkey, dataflow.sign)
     success = service.test_connection()
@@ -121,10 +167,16 @@ async def test_dataflow_connection(dataflow_id: int, db: Session = Depends(get_d
         raise HTTPException(status_code=400, detail="连接失败，请检查配置")
 
 @router.get("/{dataflow_id}/fields")
-async def get_dataflow_fields(dataflow_id: int, db: Session = Depends(get_db)):
+async def get_dataflow_fields(
+    dataflow_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     saved_fields = db.query(FieldType).filter(FieldType.data_flow_id == dataflow_id).all()
     saved_fields_dict = {f.field_id: f for f in saved_fields}
@@ -170,10 +222,17 @@ async def get_dataflow_fields(dataflow_id: int, db: Session = Depends(get_db)):
         return {"success": True, "data": response_fields}
 
 @router.post("/{dataflow_id}/fields")
-async def save_dataflow_fields(dataflow_id: int, field_config: FieldConfigSave, db: Session = Depends(get_db)):
+async def save_dataflow_fields(
+    dataflow_id: int,
+    field_config: FieldConfigSave,
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
     if not dataflow:
         raise HTTPException(status_code=404, detail="数据流不存在")
+    check_resource_access(user, dataflow.user_id, "数据流")
     
     db.query(FieldType).filter(FieldType.data_flow_id == dataflow_id).delete()
     
@@ -196,12 +255,15 @@ async def save_dataflow_fields(dataflow_id: int, field_config: FieldConfigSave, 
 async def import_fields_from_file(
     dataflow_id: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    request: Request = None,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
 ):
     try:
         dataflow = db.query(DataFlow).filter(DataFlow.id == dataflow_id).first()
         if not dataflow:
             raise HTTPException(status_code=404, detail="数据流不存在")
+        check_resource_access(user, dataflow.user_id, "数据流")
         
         contents = await file.read()
         file_extension = file.filename.split('.')[-1].lower() if '.' in file.filename else ''
@@ -258,6 +320,7 @@ async def import_fields_from_file(
         
         snapshot_name = file.filename.replace(f'.{file_extension}', '')
         db_snapshot = DataSnapshot(
+            user_id=user.id,
             data_flow_id=dataflow_id,
             name=snapshot_name,
             worksheet_id=worksheet_id,

@@ -5,6 +5,7 @@ const apiBase = window.location.protocol + '//' + window.location.hostname + ':8
 const api = axios.create({
   baseURL: apiBase + '/api',
   timeout: 10000,
+  withCredentials: true,
 })
 
 export const dataflowAPI = {
