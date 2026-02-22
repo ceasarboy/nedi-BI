@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import pandas as pd
@@ -20,12 +20,16 @@ class DataFlowCreate(BaseModel):
     sign: Optional[str] = None
     worksheet_id: Optional[str] = None
     type: str = "mingdao"
+    is_private: bool = False
+    private_api_url: Optional[str] = None
 
 class DataFlowUpdate(BaseModel):
     name: Optional[str] = None
     appkey: Optional[str] = None
     sign: Optional[str] = None
     worksheet_id: Optional[str] = None
+    is_private: Optional[bool] = None
+    private_api_url: Optional[str] = None
 
 class DataFlowResponse(BaseModel):
     id: int
@@ -34,6 +38,17 @@ class DataFlowResponse(BaseModel):
     sign: Optional[str] = None
     worksheet_id: Optional[str] = None
     type: str = "mingdao"
+    is_private: bool = False
+    private_api_url: Optional[str] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def convert_is_private(cls, data):
+        if hasattr(data, 'is_private'):
+            val = data.is_private
+            if isinstance(val, int):
+                data.is_private = bool(val)
+        return data
 
     class Config:
         from_attributes = True
@@ -96,13 +111,18 @@ async def create_dataflow(
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
+    is_private_val = 1 if dataflow.is_private else 0
+    private_api_url_val = dataflow.private_api_url if dataflow.is_private else None
+    
     db_dataflow = DataFlow(
         user_id=user.id,
         name=dataflow.name,
         type=dataflow.type,
         appkey=dataflow.appkey,
         sign=dataflow.sign,
-        worksheet_id=dataflow.worksheet_id
+        worksheet_id=dataflow.worksheet_id,
+        is_private=is_private_val,
+        private_api_url=private_api_url_val
     )
     db.add(db_dataflow)
     db.commit()
@@ -123,6 +143,15 @@ async def update_dataflow(
     check_resource_access(user, dataflow.user_id, "数据流")
     
     update_data = dataflow_update.model_dump(exclude_unset=True)
+    
+    is_private_val = None
+    if 'is_private' in update_data:
+        is_private_val = 1 if update_data['is_private'] else 0
+        update_data['is_private'] = is_private_val
+        
+        if not is_private_val:
+            update_data['private_api_url'] = None
+    
     for key, value in update_data.items():
         setattr(dataflow, key, value)
     
@@ -158,7 +187,9 @@ async def test_dataflow_connection(
         raise HTTPException(status_code=404, detail="数据流不存在")
     check_resource_access(user, dataflow.user_id, "数据流")
     
-    service = MingDaoService(dataflow.appkey, dataflow.sign)
+    is_private_bool = bool(dataflow.is_private)
+    base_url = dataflow.private_api_url if is_private_bool else "https://api.mingdao.com"
+    service = MingDaoService(dataflow.appkey, dataflow.sign, base_url)
     success = service.test_connection()
     
     if success:
@@ -192,7 +223,9 @@ async def get_dataflow_fields(
             })
         return {"success": True, "data": response_fields}
     else:
-        service = MingDaoService(dataflow.appkey, dataflow.sign)
+        is_private_bool = bool(dataflow.is_private)
+        base_url = dataflow.private_api_url if is_private_bool else "https://api.mingdao.com"
+        service = MingDaoService(dataflow.appkey, dataflow.sign, base_url)
         result = service.get_fields(dataflow.worksheet_id)
         
         if not result["success"]:

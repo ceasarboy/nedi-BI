@@ -2,10 +2,10 @@ import requests
 from typing import Dict, List, Optional
 
 class MingDaoService:
-    def __init__(self, appkey: str, sign: str):
+    def __init__(self, appkey: str, sign: str, base_url: str = "https://api.mingdao.com"):
         self.appkey = appkey
         self.sign = sign
-        self.base_url = "https://api.mingdao.com"
+        self.base_url = base_url
         self.headers = {
             "Content-Type": "application/json",
             "HAP-Appkey": appkey,

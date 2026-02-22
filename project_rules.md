@@ -647,6 +647,103 @@ import site
 
 ---
 
+## 迭代 3.5 经验总结（私有化部署支持）
+
+### 本次迭代完成的功能
+1. ✅ 数据库模型添加is_private和private_api_url字段
+2. ✅ MingDaoService支持自定义base_url参数
+3. ✅ 后端API更新创建/更新接口
+4. ✅ 前端添加私有化部署勾选框
+5. ✅ 前端添加API地址输入框和格式提示
+6. ✅ 修复is_private字段类型转换问题
+7. ✅ 更新便携版
+
+### 经验教训
+
+#### 1. 数据库布尔字段处理要点 ⭐重要
+**问题**：
+- SQLite数据库中布尔值存储为整数(0/1)
+- Pydantic模型期望布尔值
+- 直接使用会导致类型不匹配错误
+
+**解决方案**：
+```python
+class DataFlowResponse(BaseModel):
+    is_private: bool = False
+    
+    @model_validator(mode='before')
+    @classmethod
+    def convert_is_private(cls, data):
+        if hasattr(data, 'is_private'):
+            val = data.is_private
+            if isinstance(val, int):
+                data.is_private = bool(val)
+        return data
+```
+
+**教训**：
+- 使用SQLAlchemy+SQLite时，布尔字段会自动转换为整数
+- 需要使用Pydantic的model_validator显式转换
+- 或者在所有使用点显式用bool()转换
+
+#### 2. 条件字段清空要点 ⭐重要
+**问题**：
+- 当不勾选"私有化部署"时，private_api_url应该清空
+- 如果不清空，会残留旧值导致连接错误
+
+**解决方案**：
+```python
+# 创建时
+is_private_val = 1 if dataflow.is_private else 0
+private_api_url_val = dataflow.private_api_url if dataflow.is_private else None
+
+# 更新时
+if 'is_private' in update_data:
+    is_private_val = 1 if update_data['is_private'] else 0
+    update_data['is_private'] = is_private_val
+    
+    if not is_private_val:
+        update_data['private_api_url'] = None
+```
+
+**教训**：
+- 互斥的条件字段需要联动处理
+- 当条件不满足时，相关字段必须清空
+- 这可以避免残留数据导致的bug
+
+#### 3. API地址格式提示要点
+**问题**：
+- 用户容易填写包含路径的完整URL（如https://api.mingdao.com/v3/app）
+- 应该只填写基础URL（如https://api.mingdao.com）
+
+**解决方案**：
+- 在输入框下方添加清晰的提示文字
+- 示例："只填写基础地址，不要包含 /v3/app 等路径"
+- placeholder也要正确示例
+
+#### 4. 现有数据修复要点
+**问题**：
+- 已有数据可能包含错误值（如is_private=1但private_api_url格式错误）
+- 需要在发现问题后修复现有数据
+
+**解决方案**：
+```python
+# 创建临时脚本修复数据
+dataflow = db.query(DataFlow).filter(DataFlow.id == 3).first()
+dataflow.is_private = 0
+dataflow.private_api_url = None
+db.commit()
+```
+
+### 改进建议（补充）
+
+126. **API地址验证**：建议添加API地址格式验证（只包含域名和端口）
+127. **数据库迁移脚本**：建议创建数据库迁移脚本，而不是临时脚本
+128. **表单验证**：建议添加前端表单验证，确保数据格式正确
+129. **输入提示**：建议在输入框内添加内联提示（如tooltip）
+
+---
+
 ## ⚠️ 重要提醒：执行计划前请先温习经验教训
 
 在开始任何任务之前，请先执行以下步骤：
@@ -671,4 +768,5 @@ import site
 | 3.0 | 2026-02-22 | 迭代 3.0 | 记录迭代 3.0 经验教训，可部署版本生成完成 |
 | 3.2 | 2026-02-22 | 迭代 3.2 | 记录迭代 3.2 经验教训，用户认证模块完成 |
 | 3.3 | 2026-02-22 | 迭代 3.3 | 记录迭代 3.3 经验教训，UI/UX优化完成 |
-| 3.4 | 2026-02-22 | 迭代 3.4 | 记录迭代 3.4 经验教训，便携版生成问题修复
+| 3.4 | 2026-02-22 | 迭代 3.4 | 记录迭代 3.4 经验教训，便携版生成问题修复 |
+| 3.5 | 2026-02-22 | 迭代 3.5 | 记录迭代 3.5 经验教训，私有化部署支持完成

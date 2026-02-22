@@ -17,7 +17,9 @@ function ConfigPage() {
     name: '',
     appkey: '',
     sign: '',
-    worksheet_id: ''
+    worksheet_id: '',
+    is_private: false,
+    private_api_url: ''
   })
   const [localFormData, setLocalFormData] = useState({
     name: ''
@@ -42,7 +44,9 @@ function ConfigPage() {
       name: '',
       appkey: '',
       sign: '',
-      worksheet_id: ''
+      worksheet_id: '',
+      is_private: false,
+      private_api_url: ''
     })
     setIsModalOpen(true)
   }
@@ -79,7 +83,9 @@ function ConfigPage() {
       name: dataflow.name,
       appkey: dataflow.appkey,
       sign: dataflow.sign,
-      worksheet_id: dataflow.worksheet_id
+      worksheet_id: dataflow.worksheet_id,
+      is_private: dataflow.is_private || false,
+      private_api_url: dataflow.private_api_url || ''
     })
     setIsModalOpen(true)
   }
@@ -242,7 +248,7 @@ function ConfigPage() {
               <div className="dataflow-info">
                 <h4>{df.name}</h4>
                 <p>
-                  类型: {df.type === 'local' ? '本地' : '明道云'}
+                  类型: {df.type === 'local' ? '本地' : (df.is_private ? '明道云(私有化)' : '明道云')}
                   {df.type !== 'local' && ` | 工作表 ID: ${df.worksheet_id}`}
                 </p>
               </div>
@@ -377,6 +383,38 @@ function ConfigPage() {
             placeholder="请输入数据流名称"
           />
         </div>
+
+        <div className="form-group" style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={formData.is_private}
+              onChange={(e) => setFormData({ ...formData, is_private: e.target.checked, private_api_url: e.target.checked ? formData.private_api_url : '' })}
+              style={{ marginRight: '8px' }}
+            />
+            <span>私有化部署</span>
+          </label>
+          <small style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+            勾选后使用自定义API地址，不勾选使用默认明道云地址
+          </small>
+        </div>
+
+        {formData.is_private && (
+          <div className="form-group">
+            <label className="form-label">明道云API地址</label>
+            <input
+              type="text"
+              name="private_api_url"
+              className="form-input"
+              value={formData.private_api_url}
+              onChange={handleChange}
+              placeholder="例如: https://md.yourcompany.com/api"
+            />
+            <small style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+              只填写基础地址，不要包含 /v3/app 等路径
+            </small>
+          </div>
+        )}
 
         <div className="form-group">
           <label className="form-label">AppKey</label>

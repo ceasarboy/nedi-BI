@@ -53,7 +53,9 @@ async def get_fields(
         raise HTTPException(status_code=404, detail="数据流不存在")
     check_resource_access(user, dataflow.user_id, "数据流")
     
-    service = MingDaoService(dataflow.appkey, dataflow.sign)
+    is_private_bool = bool(dataflow.is_private)
+    base_url = dataflow.private_api_url if is_private_bool else "https://api.mingdao.com"
+    service = MingDaoService(dataflow.appkey, dataflow.sign, base_url)
     try:
         result = service.get_fields(dataflow.worksheet_id)
         return {"success": True, "data": result}
@@ -99,7 +101,9 @@ async def query_data(
         raise HTTPException(status_code=404, detail="数据流不存在")
     check_resource_access(user, dataflow.user_id, "数据流")
     
-    service = MingDaoService(dataflow.appkey, dataflow.sign)
+    is_private_bool = bool(dataflow.is_private)
+    base_url = dataflow.private_api_url if is_private_bool else "https://api.mingdao.com"
+    service = MingDaoService(dataflow.appkey, dataflow.sign, base_url)
     
     enabled_fields = db.query(FieldType).filter(
         FieldType.data_flow_id == request.dataflow_id,

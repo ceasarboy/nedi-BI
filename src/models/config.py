@@ -9,10 +9,12 @@ class DataFlow(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False, default="mingdao")  # 'mingdao' or 'local'
+    type = Column(String, nullable=False, default="mingdao")
     appkey = Column(String, nullable=True)
     sign = Column(String, nullable=True)
     worksheet_id = Column(String, nullable=True)
+    is_private = Column(Integer, nullable=False, default=0)
+    private_api_url = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
