@@ -14,9 +14,12 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="PB-BI 数据分析平台 API", version="1.0.0")
 
+def allow_all_origins(request: Request):
+    return request.headers.get("origin", "*")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"http://.*:3000|http://localhost:3000",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
