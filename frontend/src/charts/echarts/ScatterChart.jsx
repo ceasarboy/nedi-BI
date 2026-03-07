@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ThemedChart from './ThemedChart'
 import { getColorList, getSingleColor } from '../../utils/colorSchemes'
 
 function ScatterChart({ data, config = {} }) {
@@ -44,7 +44,7 @@ function ScatterChart({ data, config = {} }) {
     ]
   }
 
-  return <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />
+  return <ThemedChart option={option} style={{ height: '100%', width: '100%' }} />
 }
 
 export default ScatterChart

@@ -1,0 +1,358 @@
+{
+  "tables": [
+    {
+      "table_name": "users",
+      "business_definition": "存储系统用户信息，包括用户名、密码和角色，用于身份验证和权限控制",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Integer",
+          "is_primary_key": true,
+          "dimension_or_measure": "None (主键)",
+          "description": "用户唯一标识符"
+        },
+        {
+          "name": "username",
+          "type": "String",
+          "is_unique": true,
+          "dimension_or_measure": "Dimension",
+          "description": "用户名，用于登录系统"
+        },
+        {
+          "name": "password_hash",
+          "type": "String",
+          "dimension_or_measure": "None (敏感字段)",
+          "description": "密码的BCRYPT哈希值"
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "用户角色：admin或user"
+        },
+        {
+          "name": "created_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "用户创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "用户信息最后更新时间"
+        }
+      ],
+      "foreign_keys": [],
+      "relationship_paths": "作为主表被data_flows、data_snapshots、dashboards引用",
+      "sample_data": [
+        {"id": 1, "username": "admin", "role": "admin"},
+        {"id": 2, "username": "user1", "role": "user"}
+      ],
+      "potential_queries": [
+        "有哪些用户？",
+        "管理员账号是谁？",
+        "用户的角色有哪些？"
+      ]
+    },
+    {
+      "table_name": "data_flows",
+      "business_definition": "存储数据流配置信息，连接外部数据源（如明道云）并定义数据获取规则",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Integer",
+          "is_primary_key": true,
+          "dimension_or_measure": "None (主键)",
+          "description": "数据流唯一标识符"
+        },
+        {
+          "name": "user_id",
+          "type": "Integer",
+          "is_foreign_key": true,
+          "dimension_or_measure": "Dimension",
+          "description": "所属用户ID，用于数据隔离"
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "数据流名称"
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "数据源类型，目前支持mingdao（明道云）"
+        },
+        {
+          "name": "appkey",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "明道云应用标识"
+        },
+        {
+          "name": "sign",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "明道云签名密钥"
+        },
+        {
+          "name": "worksheet_id",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "明道云工作表ID"
+        },
+        {
+          "name": "is_private",
+          "type": "Integer",
+          "dimension_or_measure": "Dimension",
+          "description": "是否私有化部署：0-否，1-是"
+        },
+        {
+          "name": "private_api_url",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "私有化部署时的API地址"
+        },
+        {
+          "name": "created_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "数据流创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "数据流最后更新时间"
+        }
+      ],
+      "foreign_keys": [
+        {"column": "user_id", "references": "users.id"}
+      ],
+      "relationship_paths": "通过user_id关联users表；通过id关联field_types和data_snapshots表",
+      "sample_data": [
+        {"id": 1, "name": "销售数据", "type": "mingdao", "is_private": 0}
+      ],
+      "potential_queries": [
+        "我有哪些数据流配置？",
+        "如何连接明道云？",
+        "哪些数据流是私有化部署？"
+      ]
+    },
+    {
+      "table_name": "field_types",
+      "business_definition": "存储数据流中字段的类型定义和启用状态，用于控制哪些字段可以被查询和分析",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Integer",
+          "is_primary_key": true,
+          "dimension_or_measure": "None (主键)",
+          "description": "字段配置唯一标识符"
+        },
+        {
+          "name": "data_flow_id",
+          "type": "Integer",
+          "is_foreign_key": true,
+          "dimension_or_measure": "Dimension",
+          "description": "所属数据流ID"
+        },
+        {
+          "name": "worksheet_id",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "工作表ID"
+        },
+        {
+          "name": "field_id",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "字段ID"
+        },
+        {
+          "name": "field_name",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "字段显示名称"
+        },
+        {
+          "name": "data_type",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "字段数据类型：string、number、date等"
+        },
+        {
+          "name": "is_enabled",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "字段是否启用：true-启用，false-不启用"
+        },
+        {
+          "name": "created_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "字段配置创建时间"
+        }
+      ],
+      "foreign_keys": [
+        {"column": "data_flow_id", "references": "data_flows.id"}
+      ],
+      "relationship_paths": "通过data_flow_id关联data_flows表",
+      "sample_data": [
+        {"field_id": "id", "field_name": "订单ID", "data_type": "string", "is_enabled": "true"}
+      ],
+      "potential_queries": [
+        "数据流有哪些字段？",
+        "哪些字段启用了？",
+        "字段的数据类型是什么？"
+      ]
+    },
+    {
+      "table_name": "data_snapshots",
+      "business_definition": "存储从数据源获取的数据快照，用于离线分析和历史数据查询",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Integer",
+          "is_primary_key": true,
+          "dimension_or_measure": "None (主键)",
+          "description": "数据快照唯一标识符"
+        },
+        {
+          "name": "user_id",
+          "type": "Integer",
+          "is_foreign_key": true,
+          "dimension_or_measure": "Dimension",
+          "description": "所属用户ID"
+        },
+        {
+          "name": "data_flow_id",
+          "type": "Integer",
+          "is_foreign_key": true,
+          "dimension_or_measure": "Dimension",
+          "description": "来源数据流ID"
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "快照名称"
+        },
+        {
+          "name": "worksheet_id",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "工作表ID"
+        },
+        {
+          "name": "fields",
+          "type": "Text",
+          "dimension_or_measure": "None (元数据)",
+          "description": "字段定义的JSON数组"
+        },
+        {
+          "name": "data",
+          "type": "Text",
+          "dimension_or_measure": "Measure (数据)",
+          "description": "实际数据的JSON数组"
+        },
+        {
+          "name": "created_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "快照创建时间"
+        }
+      ],
+      "foreign_keys": [
+        {"column": "user_id", "references": "users.id"},
+        {"column": "data_flow_id", "references": "data_flows.id"}
+      ],
+      "relationship_paths": "通过user_id关联users表；通过data_flow_id关联data_flows表；被dashboards表引用",
+      "sample_data": [
+        {"id": 1, "name": "2024年销售数据", "data_flow_id": 1, "row_count": 1000}
+      ],
+      "potential_queries": [
+        "我保存了哪些数据快照？",
+        "某个快照的数据内容是什么？",
+        "如何根据数据流创建快照？"
+      ]
+    },
+    {
+      "table_name": "dashboards",
+      "business_definition": "存储数据看板配置，定义图表类型、样式和数据源，用于可视化展示",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Integer",
+          "is_primary_key": true,
+          "dimension_or_measure": "None (主键)",
+          "description": "看板唯一标识符"
+        },
+        {
+          "name": "user_id",
+          "type": "Integer",
+          "is_foreign_key": true,
+          "dimension_or_measure": "Dimension",
+          "description": "所属用户ID"
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "看板名称"
+        },
+        {
+          "name": "data_snapshot_id",
+          "type": "Integer",
+          "is_foreign_key": true,
+          "dimension_or_measure": "Dimension",
+          "description": "关联的数据快照ID"
+        },
+        {
+          "name": "chart_type",
+          "type": "String",
+          "dimension_or_measure": "Dimension",
+          "description": "图表类型：line、bar、pie、scatter等"
+        },
+        {
+          "name": "config",
+          "type": "Text",
+          "dimension_or_measure": "None (配置)",
+          "description": "图表配置的JSON对象"
+        },
+        {
+          "name": "created_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "看板创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "DateTime",
+          "dimension_or_measure": "Dimension",
+          "description": "看板最后更新时间"
+        }
+      ],
+      "foreign_keys": [
+        {"column": "user_id", "references": "users.id"},
+        {"column": "data_snapshot_id", "references": "data_snapshots.id"}
+      ],
+      "relationship_paths": "通过user_id关联users表；通过data_snapshot_id关联data_snapshots表",
+      "sample_data": [
+        {"id": 1, "name": "销售趋势图", "chart_type": "line", "data_snapshot_id": 1}
+      ],
+      "potential_queries": [
+        "我有哪些看板？",
+        "看板使用的是什么图表类型？",
+        "如何修改看板配置？"
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "description": "PB-BI数据库Schema业务文档，用于LLM理解数据库结构和业务逻辑",
+    "generated_at": "2026-02-23"
+  }
+}

@@ -115,7 +115,10 @@ function ConfigPage() {
     setMessage({ type: '', text: '' })
     try {
       const response = await dataflowAPI.getFields(dataflow.id)
-      setFields(response.data.data)
+      const fieldsData = Array.isArray(response.data) ? response.data : (response.data.data || [])
+      console.log('获取到的字段数据:', fieldsData)
+      console.log('第一个字段的is_enabled:', fieldsData[0]?.is_enabled)
+      setFields(fieldsData)
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.detail || '获取字段失败' })
       setFields([])
@@ -124,9 +127,11 @@ function ConfigPage() {
 
   const handleFieldToggle = (index) => {
     const newFields = [...fields]
+    const currentEnabled = newFields[index].is_enabled
+    const isEnabledStr = String(currentEnabled).toLowerCase() === 'true'
     newFields[index] = {
       ...newFields[index],
-      is_enabled: newFields[index].is_enabled === 'true' ? 'false' : 'true'
+      is_enabled: isEnabledStr ? 'false' : 'true'
     }
     setFields(newFields)
   }
@@ -143,9 +148,18 @@ function ConfigPage() {
   const handleSaveFields = async () => {
     if (!selectedDataflowForSettings) return
     setSavingFields(true)
+    const fieldsToSave = fields.map(f => ({
+      ...f,
+      is_enabled: String(f.is_enabled).toLowerCase() === 'true' ? 'true' : 'false'
+    }))
+    console.log('保存字段时发送的数据:', { fields: fieldsToSave })
     try {
-      await dataflowAPI.saveFields(selectedDataflowForSettings.id, { fields })
+      await dataflowAPI.saveFields(selectedDataflowForSettings.id, { fields: fieldsToSave })
       setMessage({ type: 'success', text: '字段配置保存成功' })
+      const response = await dataflowAPI.getFields(selectedDataflowForSettings.id)
+      const fieldsData = Array.isArray(response.data) ? response.data : (response.data.data || [])
+      console.log('保存后重新获取的字段数据:', fieldsData)
+      setFields(fieldsData)
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.detail || '保存失败' })
     } finally {
@@ -337,11 +351,11 @@ function ConfigPage() {
               <div className="field-cell field-type">字段类型</div>
             </div>
             {fields.map((field, index) => (
-              <div key={field.field_id} className="field-item">
+              <div key={`${field.field_id}-${field.is_enabled}`} className="field-item">
                 <div className="field-cell field-check">
                   <input
                     type="checkbox"
-                    checked={field.is_enabled === 'true'}
+                    checked={String(field.is_enabled).toLowerCase() === 'true'}
                     onChange={() => handleFieldToggle(index)}
                   />
                 </div>

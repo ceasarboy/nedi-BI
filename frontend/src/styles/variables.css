@@ -1,0 +1,691 @@
+:root {
+  --primary-color: #ff6600;
+  --primary-hover: #ff8533;
+  --primary-light: rgba(255, 102, 0, 0.1);
+  --primary-dark: #cc5200;
+  
+  --font-size-base: 14px;
+  --font-size-small: 12px;
+  --font-size-large: 16px;
+  
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --border-color: #e2e8f0;
+  --border-radius: 4px;
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.1);
+  
+  --card-bg: #ffffff;
+  --card-border: 1px solid var(--border-color);
+  --card-shadow: var(--shadow-sm);
+  --card-radius: 4px;
+  
+  --nav-bg: #ffffff;
+  --nav-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-focus: var(--primary-color);
+  
+  --transition-fast: 100ms ease;
+  --transition-normal: 150ms ease;
+  --transition-slow: 250ms ease;
+  
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   Bloomberg Terminal 极简暗色调设计
+   ======================================== */
+body[data-theme="bloomberg-dark"] {
+  --primary-color: #ff6600;
+  --primary-hover: #ff8533;
+  --primary-light: rgba(255, 102, 0, 0.15);
+  --primary-dark: #cc5200;
+  
+  --font-size-base: 14px;
+  --font-size-small: 12px;
+  --font-size-large: 16px;
+  
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  
+  --text-primary: #00ff00;
+  --text-secondary: #33ff33;
+  --text-muted: #669966;
+  
+  --border-color: #1a1a1a;
+  --border-radius: 0px;
+  
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  
+  --card-bg: #0a0a0a;
+  --card-border: 1px solid #1a1a1a;
+  --card-shadow: none;
+  --card-radius: 0px;
+  
+  --nav-bg: #000000;
+  --nav-shadow: none;
+  
+  --input-bg: #0a0a0a;
+  --input-border: #1a1a1a;
+  
+  background: #000000;
+  color: #00ff00;
+  font-family: var(--font-sans);
+}
+
+body[data-theme="bloomberg-dark"] .card,
+body[data-theme="bloomberg-dark"] .settings-section,
+body[data-theme="bloomberg-dark"] .style-card,
+body[data-theme="bloomberg-dark"] .provider-card,
+body[data-theme="bloomberg-dark"] .dataflow-card,
+body[data-theme="bloomberg-dark"] .snapshot-card,
+body[data-theme="bloomberg-dark"] .chart-card,
+body[data-theme="bloomberg-dark"] .dashboard-card {
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .card h1,
+body[data-theme="bloomberg-dark"] .card h2,
+body[data-theme="bloomberg-dark"] .card h3,
+body[data-theme="bloomberg-dark"] .card h4,
+body[data-theme="bloomberg-dark"] .settings-section h1,
+body[data-theme="bloomberg-dark"] .settings-section h2,
+body[data-theme="bloomberg-dark"] .settings-section h3,
+body[data-theme="bloomberg-dark"] .settings-section h4,
+body[data-theme="bloomberg-dark"] .dataflow-card h3,
+body[data-theme="bloomberg-dark"] .dataflow-card h4,
+body[data-theme="bloomberg-dark"] .snapshot-card h3,
+body[data-theme="bloomberg-dark"] .snapshot-card h4 {
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+body[data-theme="bloomberg-dark"] .card p,
+body[data-theme="bloomberg-dark"] .card span,
+body[data-theme="bloomberg-dark"] .card label,
+body[data-theme="bloomberg-dark"] .settings-section p,
+body[data-theme="bloomberg-dark"] .settings-section span,
+body[data-theme="bloomberg-dark"] .settings-section label,
+body[data-theme="bloomberg-dark"] .dataflow-card p,
+body[data-theme="bloomberg-dark"] .dataflow-card span,
+body[data-theme="bloomberg-dark"] .snapshot-card p,
+body[data-theme="bloomberg-dark"] .snapshot-card span {
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .card .muted,
+body[data-theme="bloomberg-dark"] .card .text-muted,
+body[data-theme="bloomberg-dark"] .settings-section .muted,
+body[data-theme="bloomberg-dark"] .settings-section .text-muted {
+  color: #669966;
+}
+
+body[data-theme="bloomberg-dark"] nav,
+body[data-theme="bloomberg-dark"] .navbar {
+  background: #000000;
+  border-bottom: 1px solid #1a1a1a;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .nav-brand {
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+body[data-theme="bloomberg-dark"] .nav-link {
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .nav-link:hover,
+body[data-theme="bloomberg-dark"] .nav-link.active {
+  color: #ff6600;
+  background: rgba(255, 102, 0, 0.1);
+}
+
+body[data-theme="bloomberg-dark"] input,
+body[data-theme="bloomberg-dark"] select,
+body[data-theme="bloomberg-dark"] textarea {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] input:focus,
+body[data-theme="bloomberg-dark"] select:focus,
+body[data-theme="bloomberg-dark"] textarea:focus {
+  border-color: #ff6600;
+  box-shadow: 0 0 0 1px rgba(255, 102, 0, 0.3);
+  outline: none;
+}
+
+body[data-theme="bloomberg-dark"] input::placeholder,
+body[data-theme="bloomberg-dark"] textarea::placeholder {
+  color: #669966;
+}
+
+body[data-theme="bloomberg-dark"] select option {
+  background: #0a0a0a;
+  color: #00ff00;
+}
+
+body[data-theme="bloomberg-dark"] button {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] button.primary,
+body[data-theme="bloomberg-dark"] .btn-primary,
+body[data-theme="bloomberg-dark"] .save-btn.primary {
+  background: #ff6600;
+  color: #000000;
+  border: none;
+  font-weight: 600;
+}
+
+body[data-theme="bloomberg-dark"] button.primary:hover,
+body[data-theme="bloomberg-dark"] .btn-primary:hover {
+  background: #ff8533;
+}
+
+body[data-theme="bloomberg-dark"] button.secondary,
+body[data-theme="bloomberg-dark"] .btn-secondary {
+  background: transparent;
+  color: #00ff00;
+  border: 1px solid #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] button.secondary:hover,
+body[data-theme="bloomberg-dark"] .btn-secondary:hover {
+  border-color: #00ff00;
+  background: rgba(0, 255, 0, 0.05);
+}
+
+body[data-theme="bloomberg-dark"] table {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  font-family: var(--font-mono);
+}
+
+body[data-theme="bloomberg-dark"] th {
+  background: #141414;
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] td {
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  border-bottom: 1px solid #0d0d0d;
+}
+
+body[data-theme="bloomberg-dark"] tr:hover td {
+  background: rgba(255, 102, 0, 0.05);
+}
+
+body[data-theme="bloomberg-dark"] .page-header h1,
+body[data-theme="bloomberg-dark"] .page-header h2 {
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+body[data-theme="bloomberg-dark"] .page-header p {
+  color: #669966;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .section-header h2 {
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+body[data-theme="bloomberg-dark"] .section-desc {
+  color: #669966;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+body[data-theme="bloomberg-dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: none;
+}
+
+body[data-theme="bloomberg-dark"] .modal-content {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .modal-header {
+  background: #141414;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] .modal-title {
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+body[data-theme="bloomberg-dark"] .modal-body {
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .modal-close {
+  color: #669966;
+}
+
+body[data-theme="bloomberg-dark"] .modal-close:hover {
+  color: #ff6600;
+  background: rgba(255, 102, 0, 0.1);
+}
+
+body[data-theme="bloomberg-dark"] .message {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .message.success {
+  border-color: #00ff00;
+  color: #00ff00;
+}
+
+body[data-theme="bloomberg-dark"] .message.error {
+  border-color: #ff3333;
+  color: #ff3333;
+}
+
+body[data-theme="bloomberg-dark"] .form-label,
+body[data-theme="bloomberg-dark"] label {
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+body[data-theme="bloomberg-dark"] .form-input,
+body[data-theme="bloomberg-dark"] .form-select {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] .empty-state {
+  color: #669966;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .sidebar {
+  background: #000000;
+  border-right: 1px solid #1a1a1a;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .sidebar-item {
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .sidebar-item:hover,
+body[data-theme="bloomberg-dark"] .sidebar-item.active {
+  background: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
+}
+
+body[data-theme="bloomberg-dark"] .dropdown {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .dropdown-item {
+  color: #00ff00;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .dropdown-item:hover {
+  background: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
+}
+
+body[data-theme="bloomberg-dark"] .tag {
+  background: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] .badge {
+  background: #ff6600;
+  color: #000000;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] hr,
+body[data-theme="bloomberg-dark"] .divider {
+  border-color: #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] .code-block,
+body[data-theme="bloomberg-dark"] pre {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #2a2a2a;
+}
+
+body[data-theme="bloomberg-dark"] .style-card {
+  border: 1px solid #1a1a1a;
+  background: #0a0a0a;
+}
+
+body[data-theme="bloomberg-dark"] .style-card.active {
+  border-color: #ff6600;
+}
+
+body[data-theme="bloomberg-dark"] .style-card h3 {
+  color: #ff6600;
+}
+
+body[data-theme="bloomberg-dark"] .style-card p {
+  color: #669966;
+}
+
+body[data-theme="bloomberg-dark"] .color-option {
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] .color-option.active {
+  outline: 2px solid #ff6600;
+  outline-offset: 2px;
+}
+
+body[data-theme="bloomberg-dark"] .analysis-section,
+body[data-theme="bloomberg-dark"] .analysis-card,
+body[data-theme="bloomberg-dark"] .statistical-section,
+body[data-theme="bloomberg-dark"] .monte-carlo-section,
+body[data-theme="bloomberg-dark"] .correlation-section {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .analysis-section h2,
+body[data-theme="bloomberg-dark"] .analysis-section h3,
+body[data-theme="bloomberg-dark"] .analysis-card h2,
+body[data-theme="bloomberg-dark"] .analysis-card h3,
+body[data-theme="bloomberg-dark"] .statistical-section h2,
+body[data-theme="bloomberg-dark"] .statistical-section h3,
+body[data-theme="bloomberg-dark"] .monte-carlo-section h2,
+body[data-theme="bloomberg-dark"] .monte-carlo-section h3,
+body[data-theme="bloomberg-dark"] .correlation-section h2,
+body[data-theme="bloomberg-dark"] .correlation-section h3 {
+  color: #ff6600;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+body[data-theme="bloomberg-dark"] .analysis-section p,
+body[data-theme="bloomberg-dark"] .analysis-section label,
+body[data-theme="bloomberg-dark"] .analysis-card p,
+body[data-theme="bloomberg-dark"] .analysis-card label,
+body[data-theme="bloomberg-dark"] .statistical-section p,
+body[data-theme="bloomberg-dark"] .statistical-section label,
+body[data-theme="bloomberg-dark"] .monte-carlo-section p,
+body[data-theme="bloomberg-dark"] .monte-carlo-section label,
+body[data-theme="bloomberg-dark"] .correlation-section p,
+body[data-theme="bloomberg-dark"] .correlation-section label {
+  color: #00ff00;
+  font-family: var(--font-mono);
+}
+
+/* ========================================
+   现代专业风格
+   ======================================== */
+body[data-theme="modern-light"] {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #eff6ff;
+  --primary-dark: #1e40af;
+  
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --border-color: #e2e8f0;
+  --border-radius: 8px;
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.08);
+  
+  --card-bg: #ffffff;
+  --card-border: 1px solid var(--border-color);
+  --card-shadow: var(--shadow-sm);
+  --card-radius: 8px;
+  
+  --nav-bg: #ffffff;
+  --nav-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  
+  background: var(--bg-secondary);
+}
+
+body[data-theme="modern-light"] .card,
+body[data-theme="modern-light"] .settings-section,
+body[data-theme="modern-light"] .style-card,
+body[data-theme="modern-light"] .provider-card,
+body[data-theme="modern-light"] .dataflow-card,
+body[data-theme="modern-light"] .snapshot-card,
+body[data-theme="modern-light"] .chart-card,
+body[data-theme="modern-light"] .dashboard-card {
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
+body[data-theme="modern-light"] .card:hover,
+body[data-theme="modern-light"] .dataflow-card:hover,
+body[data-theme="modern-light"] .snapshot-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+body[data-theme="modern-light"] nav,
+body[data-theme="modern-light"] .navbar {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+body[data-theme="modern-light"] input,
+body[data-theme="modern-light"] select,
+body[data-theme="modern-light"] textarea {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+body[data-theme="modern-light"] input:focus,
+body[data-theme="modern-light"] select:focus,
+body[data-theme="modern-light"] textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+body[data-theme="modern-light"] button.primary,
+body[data-theme="modern-light"] .btn-primary,
+body[data-theme="modern-light"] .save-btn.primary {
+  background: var(--primary-color);
+  border: none;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+body[data-theme="modern-light"] button.primary:hover,
+body[data-theme="modern-light"] .btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.25);
+}
+
+/* ========================================
+   通用组件样式
+   ======================================== */
+.card,
+.settings-section,
+.style-card,
+.provider-card,
+.dataflow-card,
+.snapshot-card,
+.chart-card,
+.dashboard-card {
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-normal);
+}
+
+button,
+.btn {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 14px;
+    --border-radius: 4px;
+    --card-radius: 4px;
+  }
+  
+  body[data-theme="bloomberg-dark"],
+  body[data-theme="modern-light"] {
+    --card-radius: 4px;
+    --border-radius: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --font-size-base: 13px;
+    --card-radius: 4px;
+  }
+}
+
+/* 动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

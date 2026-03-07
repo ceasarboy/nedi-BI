@@ -283,6 +283,21 @@ async def get_snapshot(
                 if field_id and field_id in saved_fields_dict:
                     field["data_type"] = saved_fields_dict[field_id].data_type
                     field["is_enabled"] = saved_fields_dict[field_id].is_enabled
+        
+        enabled_field_ids = set()
+        for field in fields:
+            if field.get("is_enabled", "true") == "true":
+                enabled_field_ids.add(field.get("field_id"))
+        
+        filtered_fields = [f for f in fields if f.get("is_enabled", "true") == "true"]
+        
+        filtered_data = []
+        for row in data:
+            filtered_row = {k: v for k, v in row.items() if k in enabled_field_ids}
+            filtered_data.append(filtered_row)
+        
+        fields = filtered_fields
+        data = filtered_data
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="数据解析失败")
     
@@ -364,18 +379,33 @@ async def import_local_file(
         snapshot_name = name if name else file.filename
         worksheet_id = f"local_{dataflow_id}_{int(datetime.now().timestamp())}"
         
-        db.query(FieldType).filter(FieldType.data_flow_id == dataflow_id).delete()
+        existing_fields = db.query(FieldType).filter(
+            FieldType.data_flow_id == dataflow_id
+        ).all()
+        existing_fields_dict = {f.field_id: f for f in existing_fields}
+        
+        new_field_ids = {f["field_id"] for f in fields}
+        
+        for field in existing_fields:
+            if field.field_id not in new_field_ids:
+                db.delete(field)
         
         for field in fields:
-            field_type = FieldType(
-                data_flow_id=dataflow_id,
-                worksheet_id=worksheet_id,
-                field_id=field["field_id"],
-                field_name=field["field_name"],
-                data_type=field["data_type"],
-                is_enabled="true"
-            )
-            db.add(field_type)
+            field_id = field["field_id"]
+            if field_id in existing_fields_dict:
+                existing_field = existing_fields_dict[field_id]
+                existing_field.field_name = field["field_name"]
+                existing_field.worksheet_id = worksheet_id
+            else:
+                field_type = FieldType(
+                    data_flow_id=dataflow_id,
+                    worksheet_id=worksheet_id,
+                    field_id=field_id,
+                    field_name=field["field_name"],
+                    data_type=field["data_type"],
+                    is_enabled="true"
+                )
+                db.add(field_type)
         
         db_snapshot = DataSnapshot(
             user_id=user.id,

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import ReactECharts from 'echarts-for-react'
+import ThemedChart from '../charts/echarts/ThemedChart'
 import { analysisAPI, dataAPI } from '../services/api'
+import '../styles/AnalysisComponents.css'
 
 function CorrelationPage() {
   const [activeTab, setActiveTab] = useState('analysis')
@@ -224,69 +225,51 @@ function CorrelationPage() {
     <div className="page">
       <h1 className="page-title">相关性分析</h1>
       
-      <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
+      <div className="tab-group" style={{ marginBottom: '16px' }}>
         {['analysis', 'explore'].map(tab => (
           <div
             key={tab}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              background: activeTab === tab ? '#3b82f6' : '#f3f4f6',
-              color: activeTab === tab ? '#fff' : '#374151',
-              fontSize: '14px',
-              fontWeight: activeTab === tab ? 600 : 400
-            }}
+            className={`tab-item ${activeTab === tab ? 'tab-item-active' : 'tab-item-default'}`}
             onClick={() => setActiveTab(tab)}>
             {tab === 'analysis' ? '相关性分析' : '相关性探索'}
           </div>
         ))}
       </div>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '16px', height: 'calc(100vh - 320px)' }}>
-        {/* 左侧选择区域 */}
-        <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '16px', overflowY: 'auto' }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: '#374151' }}>选择数据快照</h3>
+      <div className="analysis-layout analysis-layout-lg">
+        <div className="panel">
+          <h3 className="panel-title">选择数据快照</h3>
           <div style={{ marginBottom: '16px' }}>
             {snapshots.map(s => (
               <div
                 key={s.id}
-                style={{
-                  padding: '10px 12px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  background: selectedSnapshots.find(ss => ss.id === s.id) ? '#eff6ff' : '#f9fafb',
-                  border: selectedSnapshots.find(ss => ss.id === s.id) ? '2px solid #3b82f6' : '2px solid transparent',
-                  marginBottom: '6px'
-                }}
+                className={`select-item ${selectedSnapshots.find(ss => ss.id === s.id) ? 'select-item-active' : 'select-item-default'}`}
                 onClick={() => toggleSnapshot(s)}>
-                <span style={{ fontSize: '13px' }}>{s.name}</span>
+                <span className="select-item-text">{s.name}</span>
               </div>
             ))}
           </div>
 
           {selectedSnapshots.length > 0 && (
             <>
-              <div style={{ marginBottom: '16px', borderBottom: '1px solid #e5e7eb', paddingBottom: '16px' }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: '#374151' }}>已选字段</h3>
+              <div style={{ marginBottom: '16px', borderBottom: '1px solid var(--border-color, #e5e7eb)', paddingBottom: '16px' }}>
+                <h3 className="panel-title">已选字段</h3>
                 <div style={{ marginBottom: '12px' }}>
                   {selectedSnapshots.map(snapshot => {
                     const numericFields = getNumericFields(snapshot.id)
                     if (numericFields.length === 0) return null
                     
                     return (
-                      <div key={snapshot.id} style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
-                          {snapshot.name}
-                        </div>
+                      <div key={snapshot.id} className="field-with-snapshot">
+                        <div className="snapshot-name-label">{snapshot.name}</div>
                         {numericFields.map(field => (
-                          <label key={field.field_id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', cursor: 'pointer' }}>
+                          <label key={field.field_id} className="checkbox-row">
                             <input
                               type="checkbox"
                               checked={isFieldSelected(snapshot.id, field.field_name)}
                               onChange={() => toggleField(snapshot.id, field.field_name)}
                             />
-                            <span style={{ fontSize: '12px' }}>{field.field_name}</span>
+                            <span className="checkbox-row-text">{field.field_name}</span>
                           </label>
                         ))}
                       </div>
@@ -296,9 +279,9 @@ function CorrelationPage() {
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: '#374151' }}>相关系数类型</h3>
+                <h3 className="panel-title">相关系数类型</h3>
                 {correlationMethods.map(method => (
-                  <label key={method.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}>
+                  <label key={method.value} className="radio-row">
                     <input
                       type="radio"
                       name="correlationMethod"
@@ -306,14 +289,14 @@ function CorrelationPage() {
                       checked={correlationMethod === method.value}
                       onChange={(e) => setCorrelationMethod(e.target.value)}
                     />
-                    <span style={{ fontSize: '12px' }}>{method.label}</span>
+                    <span className="radio-row-text">{method.label}</span>
                   </label>
                 ))}
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: '#374151' }}>相关性阈值</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 className="panel-title">相关性阈值</h3>
+                <div className="threshold-input-row">
                   <input
                     type="number"
                     step="0.1"
@@ -328,12 +311,10 @@ function CorrelationPage() {
                         setCorrelationThresholdForExplore(val)
                       }
                     }}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                    className="param-input"
                   />
                 </div>
-                <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#6b7280' }}>
-                  默认: {activeTab === 'analysis' ? '0.7' : '0.8'}
-                </p>
+                <p className="threshold-hint">默认: {activeTab === 'analysis' ? '0.7' : '0.8'}</p>
               </div>
 
               <button
@@ -347,46 +328,39 @@ function CorrelationPage() {
           )}
         </div>
 
-        {/* 右侧结果展示区域 */}
-        <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '16px', overflowY: 'auto' }}>
+        <div className="panel">
           {selectedSnapshots.length === 0 ? (
-            <div className="empty-state" style={{ height: '100%' }}>
+            <div className="empty-state">
               <p>请选择数据快照开始{activeTab === 'analysis' ? '相关性分析' : '相关性探索'}</p>
             </div>
           ) : activeTab === 'analysis' && correlationResult ? (
             <div>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600, color: '#374151' }}>
-                相关性分析结果 - {correlationMethods.find(m => m.value === correlationResult.correlation_method)?.label}
-              </h3>
+              <h3 className="result-title">相关性分析结果 - {correlationMethods.find(m => m.value === correlationResult.correlation_method)?.label}</h3>
 
-              <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#6b7280' }}>
+              <p className="result-text" style={{ marginBottom: '16px' }}>
                 相关性阈值: {correlationResult.correlation_threshold}
               </p>
 
-              {/* 高相关变量对 */}
               {correlationResult.high_correlations && correlationResult.high_correlations.length > 0 && (
-                <div style={{ background: '#fef3c7', border: '1px solid #fbbf24', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
-                  <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#92400e' }}>高相关变量对（|r| &gt; {correlationResult.correlation_threshold}）</h4>
-                  <table style={{ width: '100%', fontSize: '13px' }}>
+                <div className="correlation-warning-box">
+                  <h4 className="correlation-warning-title">高相关变量对（|r| &gt; {correlationResult.correlation_threshold}）</h4>
+                  <table className="high-correlation-table">
                     <thead>
-                      <tr style={{ borderBottom: '1px solid #fbbf24' }}>
-                        <th style={{ textAlign: 'left', padding: '8px 0' }}>变量1</th>
-                        <th style={{ textAlign: 'left', padding: '8px 0' }}>变量2</th>
-                        <th style={{ textAlign: 'right', padding: '8px 0' }}>相关系数</th>
-                        <th style={{ textAlign: 'center', padding: '8px 0' }}>类型</th>
+                      <tr>
+                        <th>变量1</th>
+                        <th>变量2</th>
+                        <th style={{ textAlign: 'right' }}>相关系数</th>
+                        <th style={{ textAlign: 'center' }}>类型</th>
                       </tr>
                     </thead>
                     <tbody>
                       {correlationResult.high_correlations.map((item, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid #fef3c7' }}>
-                          <td style={{ padding: '8px 0' }}>{item.field1}</td>
-                          <td style={{ padding: '8px 0' }}>{item.field2}</td>
+                        <tr key={idx}>
+                          <td>{item.field1}</td>
+                          <td>{item.field2}</td>
                           <td style={{ textAlign: 'right', fontWeight: 600 }}>{item.correlation}</td>
                           <td style={{ textAlign: 'center' }}>
-                            <span style={{ 
-                              color: item.type === '强正相关' ? '#16a34a' : '#dc2626',
-                              fontWeight: 600
-                            }}>
+                            <span className={`type-badge ${item.type === '强正相关' ? 'type-badge-positive' : 'type-badge-negative'}`}>
                               {item.type}
                             </span>
                           </td>
@@ -397,43 +371,37 @@ function CorrelationPage() {
                 </div>
               )}
 
-              {/* 相关系数热力图 */}
               {correlationResult.chart_data && (
-                <div style={{ marginBottom: '20px', height: '500px' }}>
-                  <ReactECharts 
+                <div className="chart-container chart-container-lg" style={{ marginBottom: '20px' }}>
+                  <ThemedChart 
                     option={getCorrelationChartOption(correlationResult.chart_data)}
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
               )}
 
-              {/* 相关系数矩阵 */}
-              <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px' }}>
-                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#374151' }}>相关系数矩阵</h4>
+              <div className="correlation-matrix-container">
+                <h4 className="correlation-matrix-title">相关系数矩阵</h4>
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+                  <table className="correlation-matrix-table">
                     <thead>
-                      <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                        <th style={{ textAlign: 'left', padding: '8px' }}></th>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}></th>
                         {correlationResult.fields.map((field, idx) => (
-                          <th key={idx} style={{ textAlign: 'center', padding: '8px', fontSize: '11px' }}>
-                            {field.snapshot_name}-{field.field_name}
-                          </th>
+                          <th key={idx}>{field.snapshot_name}-{field.field_name}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {correlationResult.correlation_matrix.map((row, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '8px', fontWeight: 600, fontSize: '11px' }}>
+                        <tr key={i}>
+                          <td style={{ fontWeight: 600, textAlign: 'left' }}>
                             {correlationResult.fields[i]?.snapshot_name}-{correlationResult.fields[i]?.field_name}
                           </td>
                           {row.map((value, j) => (
                             <td 
                               key={j} 
                               style={{ 
-                                textAlign: 'center', 
-                                padding: '8px',
                                 background: value > correlationResult.correlation_threshold ? 'rgba(239, 68, 68, 0.2)' : 
                                            value < -correlationResult.correlation_threshold ? 'rgba(59, 130, 246, 0.2)' : 'transparent'
                               }}>
@@ -449,13 +417,11 @@ function CorrelationPage() {
             </div>
           ) : activeTab === 'explore' && exploreResult ? (
             <div>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600, color: '#374151' }}>
-                相关性探索结果 - {correlationMethods.find(m => m.value === exploreResult.correlation_method)?.label}
-              </h3>
+              <h3 className="result-title">相关性探索结果 - {correlationMethods.find(m => m.value === exploreResult.correlation_method)?.label}</h3>
 
-              <div style={{ background: '#dbeafe', border: '1px solid #93c5fd', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#1e40af' }}>分析统计</h4>
-                <p style={{ margin: '0', fontSize: '13px' }}>
+              <div className="correlation-info-box">
+                <h4 className="correlation-info-title">分析统计</h4>
+                <p className="correlation-info-text">
                   总共分析了 <strong>{exploreResult.total_pairs}</strong> 对字段组合，
                   发现 <strong>{exploreResult.high_correlation_count}</strong> 对高相关字段
                   （|r| &gt; {exploreResult.correlation_threshold}）
@@ -463,40 +429,33 @@ function CorrelationPage() {
               </div>
 
               {exploreResult.high_correlation_pairs && exploreResult.high_correlation_pairs.length > 0 ? (
-                <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px' }}>
-                  <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#374151' }}>高相关字段对（按相关系数排序）</h4>
-                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                <div className="correlation-matrix-container">
+                  <h4 className="correlation-matrix-title">高相关字段对（按相关系数排序）</h4>
+                  <table className="high-correlation-table">
                     <thead>
-                      <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                        <th style={{ textAlign: 'left', padding: '10px 8px' }}>字段1</th>
-                        <th style={{ textAlign: 'left', padding: '10px 8px' }}>字段2</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px' }}>相关系数</th>
-                        <th style={{ textAlign: 'center', padding: '10px 8px' }}>类型</th>
+                      <tr>
+                        <th>字段1</th>
+                        <th>字段2</th>
+                        <th style={{ textAlign: 'right' }}>相关系数</th>
+                        <th style={{ textAlign: 'center' }}>类型</th>
                       </tr>
                     </thead>
                     <tbody>
                       {exploreResult.high_correlation_pairs.map((item, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '10px 8px' }}>
-                            <div style={{ fontSize: '12px', color: '#6b7280' }}>{item.field1.snapshot_name}</div>
-                            <div style={{ fontSize: '13px', fontWeight: 500 }}>{item.field1.field_name}</div>
+                        <tr key={idx}>
+                          <td>
+                            <div className="field-name-sub">{item.field1.snapshot_name}</div>
+                            <div className="field-name-main">{item.field1.field_name}</div>
                           </td>
-                          <td style={{ padding: '10px 8px' }}>
-                            <div style={{ fontSize: '12px', color: '#6b7280' }}>{item.field2.snapshot_name}</div>
-                            <div style={{ fontSize: '13px', fontWeight: 500 }}>{item.field2.field_name}</div>
+                          <td>
+                            <div className="field-name-sub">{item.field2.snapshot_name}</div>
+                            <div className="field-name-main">{item.field2.field_name}</div>
                           </td>
-                          <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 600, fontSize: '14px' }}>
+                          <td style={{ textAlign: 'right', fontWeight: 600, fontSize: '14px' }}>
                             {item.correlation}
                           </td>
-                          <td style={{ textAlign: 'center', padding: '10px 8px' }}>
-                            <span style={{ 
-                              padding: '4px 12px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              background: item.type === '强正相关' ? '#dcfce7' : '#fee2e2',
-                              color: item.type === '强正相关' ? '#166534' : '#991b1b'
-                            }}>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className={`type-badge ${item.type === '强正相关' ? 'type-badge-positive' : 'type-badge-negative'}`}>
                               {item.type}
                             </span>
                           </td>
@@ -506,14 +465,14 @@ function CorrelationPage() {
                   </table>
                 </div>
               ) : (
-                <div className="empty-state" style={{ height: '100%' }}>
+                <div className="empty-state">
                   <p>没有发现高相关字段对（|r| &gt; {exploreResult.correlation_threshold}）</p>
-                  <p style={{ fontSize: '13px', color: '#6b7280' }}>尝试降低相关性阈值</p>
+                  <p style={{ fontSize: '13px' }}>尝试降低相关性阈值</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="empty-state" style={{ height: '100%' }}>
+            <div className="empty-state">
               <p>选择字段并执行{activeTab === 'analysis' ? '相关性分析' : '相关性探索'}</p>
             </div>
           )}

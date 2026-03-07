@@ -505,7 +505,7 @@ body {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: var(--primary);
+  accent-color: var(--primary-color, #3b82f6);
 }
 
 .field-name {
@@ -1238,4 +1238,627 @@ body {
 .btn-large {
   padding: 14px 32px;
   font-size: 16px;
+}
+
+/* ========================================
+   Bloomberg Terminal 极简暗色调设计
+   ======================================== */
+body[data-theme="bloomberg-dark"] {
+  --primary: #ff6600;
+  --primary-light: #ff8533;
+  --primary-dark: #cc5200;
+  --primary-50: rgba(255, 102, 0, 0.1);
+  --primary-100: rgba(255, 102, 0, 0.2);
+  --primary-500: #ff6600;
+  --secondary: #00ff00;
+  --secondary-light: #33ff33;
+  --secondary-dark: #00cc00;
+  --success: #00ff00;
+  --success-light: #33ff33;
+  --accent: #ff6600;
+  --accent-light: #ff8533;
+  --danger: #ff3333;
+  --danger-light: #ff5555;
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --bg-gradient: none;
+  --text-primary: #00ff00;
+  --text-secondary: #33ff33;
+  --text-tertiary: #669966;
+  --text-muted: #669966;
+  --border: #1a1a1a;
+  --border-light: #0d0d0d;
+  --border-dark: #2a2a2a;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+}
+
+body[data-theme="bloomberg-dark"] .navbar {
+  background: #000000;
+  border-bottom: 1px solid #1a1a1a;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .nav-brand {
+  color: #ff6600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+body[data-theme="bloomberg-dark"] .nav-link {
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+body[data-theme="bloomberg-dark"] .nav-link:hover,
+body[data-theme="bloomberg-dark"] .nav-link.active {
+  color: #ff6600;
+  background: rgba(255, 102, 0, 0.1);
+}
+
+body[data-theme="bloomberg-dark"] .card,
+body[data-theme="bloomberg-dark"] .dataflow-item,
+body[data-theme="bloomberg-dark"] .snapshot-item,
+body[data-theme="bloomberg-dark"] .dashboard-item,
+body[data-theme="bloomberg-dark"] .chart-card {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: none;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .card h3,
+body[data-theme="bloomberg-dark"] .card h4,
+body[data-theme="bloomberg-dark"] .dataflow-item h3,
+body[data-theme="bloomberg-dark"] .dataflow-item h4,
+body[data-theme="bloomberg-dark"] .snapshot-item h3,
+body[data-theme="bloomberg-dark"] .snapshot-item h4 {
+  color: #ff6600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+}
+
+body[data-theme="bloomberg-dark"] .card p,
+body[data-theme="bloomberg-dark"] .card span,
+body[data-theme="bloomberg-dark"] .dataflow-item p,
+body[data-theme="bloomberg-dark"] .dataflow-item span,
+body[data-theme="bloomberg-dark"] .snapshot-item p,
+body[data-theme="bloomberg-dark"] .snapshot-item span {
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .analysis-section,
+body[data-theme="bloomberg-dark"] .analysis-card,
+body[data-theme="bloomberg-dark"] .statistical-section,
+body[data-theme="bloomberg-dark"] .monte-carlo-section,
+body[data-theme="bloomberg-dark"] .correlation-section {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: none;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .analysis-section h2,
+body[data-theme="bloomberg-dark"] .analysis-section h3,
+body[data-theme="bloomberg-dark"] .analysis-card h2,
+body[data-theme="bloomberg-dark"] .analysis-card h3,
+body[data-theme="bloomberg-dark"] .statistical-section h2,
+body[data-theme="bloomberg-dark"] .statistical-section h3,
+body[data-theme="bloomberg-dark"] .monte-carlo-section h2,
+body[data-theme="bloomberg-dark"] .monte-carlo-section h3,
+body[data-theme="bloomberg-dark"] .correlation-section h2,
+body[data-theme="bloomberg-dark"] .correlation-section h3 {
+  color: #ff6600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+body[data-theme="bloomberg-dark"] .analysis-section p,
+body[data-theme="bloomberg-dark"] .analysis-section label,
+body[data-theme="bloomberg-dark"] .analysis-card p,
+body[data-theme="bloomberg-dark"] .analysis-card label,
+body[data-theme="bloomberg-dark"] .statistical-section p,
+body[data-theme="bloomberg-dark"] .statistical-section label,
+body[data-theme="bloomberg-dark"] .monte-carlo-section p,
+body[data-theme="bloomberg-dark"] .monte-carlo-section label,
+body[data-theme="bloomberg-dark"] .correlation-section p,
+body[data-theme="bloomberg-dark"] .correlation-section label {
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: none;
+}
+
+body[data-theme="bloomberg-dark"] .modal-content {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: none;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .modal-header {
+  background: #141414;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] .modal-title {
+  color: #ff6600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+}
+
+body[data-theme="bloomberg-dark"] .modal-body {
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .modal-close {
+  color: #669966;
+}
+
+body[data-theme="bloomberg-dark"] .modal-close:hover {
+  color: #ff6600;
+  background: rgba(255, 102, 0, 0.1);
+}
+
+body[data-theme="bloomberg-dark"] input,
+body[data-theme="bloomberg-dark"] select,
+body[data-theme="bloomberg-dark"] textarea {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] input::placeholder,
+body[data-theme="bloomberg-dark"] textarea::placeholder {
+  color: #669966;
+}
+
+body[data-theme="bloomberg-dark"] input:focus,
+body[data-theme="bloomberg-dark"] select:focus,
+body[data-theme="bloomberg-dark"] textarea:focus {
+  border-color: #ff6600;
+  box-shadow: 0 0 0 1px rgba(255, 102, 0, 0.3);
+  outline: none;
+}
+
+body[data-theme="bloomberg-dark"] select option {
+  background: #0a0a0a;
+  color: #00ff00;
+}
+
+body[data-theme="bloomberg-dark"] button {
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] .btn-primary,
+body[data-theme="bloomberg-dark"] button.primary {
+  background: #ff6600;
+  color: #000000;
+  border: none;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+body[data-theme="bloomberg-dark"] .btn-primary:hover,
+body[data-theme="bloomberg-dark"] button.primary:hover {
+  background: #ff8533;
+  box-shadow: none;
+  transform: none;
+}
+
+body[data-theme="bloomberg-dark"] .btn-secondary,
+body[data-theme="bloomberg-dark"] button.secondary {
+  background: transparent;
+  color: #00ff00;
+  border: 1px solid #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] .btn-secondary:hover,
+body[data-theme="bloomberg-dark"] button.secondary:hover {
+  border-color: #00ff00;
+  background: rgba(0, 255, 0, 0.05);
+}
+
+body[data-theme="bloomberg-dark"] table {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] th {
+  background: #141414;
+  color: #ff6600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] td {
+  color: #00ff00;
+  border-bottom: 1px solid #0d0d0d;
+}
+
+body[data-theme="bloomberg-dark"] tr:hover td {
+  background: rgba(255, 102, 0, 0.05);
+}
+
+body[data-theme="bloomberg-dark"] .form-label,
+body[data-theme="bloomberg-dark"] label {
+  color: #ff6600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+body[data-theme="bloomberg-dark"] .form-input,
+body[data-theme="bloomberg-dark"] .form-select {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] .page-header h1,
+body[data-theme="bloomberg-dark"] .page-header h2 {
+  color: #ff6600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 14px;
+}
+
+body[data-theme="bloomberg-dark"] .page-header p {
+  color: #669966;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .empty-state {
+  color: #669966;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .message {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .message.success {
+  border-color: #00ff00;
+  color: #00ff00;
+}
+
+body[data-theme="bloomberg-dark"] .message.error {
+  border-color: #ff3333;
+  color: #ff3333;
+}
+
+body[data-theme="bloomberg-dark"] .sidebar {
+  background: #000000;
+  border-right: 1px solid #1a1a1a;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .sidebar-item {
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+body[data-theme="bloomberg-dark"] .sidebar-item:hover,
+body[data-theme="bloomberg-dark"] .sidebar-item.active {
+  background: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
+}
+
+body[data-theme="bloomberg-dark"] .dropdown {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-theme="bloomberg-dark"] .dropdown-item {
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .dropdown-item:hover {
+  background: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
+}
+
+body[data-theme="bloomberg-dark"] .tooltip {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+body[data-theme="bloomberg-dark"] .loading-spinner {
+  border-color: #1a1a1a;
+  border-top-color: #ff6600;
+}
+
+body[data-theme="bloomberg-dark"] .tag {
+  background: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] .badge {
+  background: #ff6600;
+  color: #000000;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 10px;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] hr,
+body[data-theme="bloomberg-dark"] .divider {
+  border-color: #1a1a1a;
+}
+
+body[data-theme="bloomberg-dark"] .code-block,
+body[data-theme="bloomberg-dark"] pre {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+  border-radius: 0;
+}
+
+body[data-theme="bloomberg-dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #2a2a2a;
+}
+
+/* 高级统计和蒙特卡洛页面内联样式覆盖 */
+body[data-theme="bloomberg-dark"] .page,
+body[data-theme="bloomberg-dark"] .page-title {
+  background: #000000 !important;
+  color: #ff6600 !important;
+}
+
+body[data-theme="bloomberg-dark"] .analysis-panel,
+body[data-theme="bloomberg-dark"] .stats-panel,
+body[data-theme="bloomberg-dark"] .monte-carlo-panel {
+  background: #0a0a0a !important;
+  border: 1px solid #1a1a1a !important;
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .result-box,
+body[data-theme="bloomberg-dark"] .stats-result,
+body[data-theme="bloomberg-dark"] .monte-carlo-result {
+  background: #0a0a0a !important;
+  border: 1px solid #1a1a1a !important;
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .param-section,
+body[data-theme="bloomberg-dark"] .control-section {
+  background: #0a0a0a !important;
+  border: 1px solid #1a1a1a !important;
+}
+
+body[data-theme="bloomberg-dark"] .param-section h3,
+body[data-theme="bloomberg-dark"] .control-section h3 {
+  color: #ff6600 !important;
+}
+
+body[data-theme="bloomberg-dark"] .param-section label,
+body[data-theme="bloomberg-dark"] .control-section label {
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .param-section p,
+body[data-theme="bloomberg-dark"] .control-section p {
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .stats-box,
+body[data-theme="bloomberg-dark"] .info-box {
+  background: #141414 !important;
+  border: 1px solid #1a1a1a !important;
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .stats-box h4,
+body[data-theme="bloomberg-dark"] .info-box h4 {
+  color: #ff6600 !important;
+}
+
+body[data-theme="bloomberg-dark"] .stats-box p,
+body[data-theme="bloomberg-dark"] .info-box p {
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .success-box {
+  background: rgba(0, 255, 0, 0.1) !important;
+  border-color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .warning-box {
+  background: rgba(255, 102, 0, 0.1) !important;
+  border-color: #ff6600 !important;
+}
+
+body[data-theme="bloomberg-dark"] .tab-button {
+  background: #0a0a0a !important;
+  color: #00ff00 !important;
+  border: 1px solid #1a1a1a !important;
+}
+
+body[data-theme="bloomberg-dark"] .tab-button.active {
+  background: #ff6600 !important;
+  color: #000000 !important;
+}
+
+body[data-theme="bloomberg-dark"] .case-item {
+  background: #0a0a0a !important;
+  border: 1px solid #1a1a1a !important;
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .case-item:hover {
+  border-color: #ff6600 !important;
+}
+
+body[data-theme="bloomberg-dark"] .case-item.active {
+  background: rgba(255, 102, 0, 0.1) !important;
+  border-color: #ff6600 !important;
+}
+
+body[data-theme="bloomberg-dark"] .field-item {
+  background: #0a0a0a !important;
+  border: 1px solid #1a1a1a !important;
+}
+
+body[data-theme="bloomberg-dark"] .field-item:hover {
+  border-color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] .field-item.selected {
+  background: rgba(255, 102, 0, 0.1) !important;
+  border-color: #ff6600 !important;
+}
+
+/* 修复所有内联白色背景 */
+body[data-theme="bloomberg-dark"] [style*="background: #fff"],
+body[data-theme="bloomberg-dark"] [style*="background:#fff"],
+body[data-theme="bloomberg-dark"] [style*="background: white"],
+body[data-theme="bloomberg-dark"] [style*="background:white"],
+body[data-theme="bloomberg-dark"] [style*="background-color: #fff"],
+body[data-theme="bloomberg-dark"] [style*="background-color:#fff"],
+body[data-theme="bloomberg-dark"] [style*="background-color: white"],
+body[data-theme="bloomberg-dark"] [style*="background-color:white"] {
+  background: #0a0a0a !important;
+}
+
+body[data-theme="bloomberg-dark"] [style*="background: #f9fafb"],
+body[data-theme="bloomberg-dark"] [style*="background:#f9fafb"],
+body[data-theme="bloomberg-dark"] [style*="background: #f3f4f6"],
+body[data-theme="bloomberg-dark"] [style*="background:#f3f4f6"] {
+  background: #141414 !important;
+}
+
+body[data-theme="bloomberg-dark"] [style*="background: #dbeafe"],
+body[data-theme="bloomberg-dark"] [style*="background:#dbeafe"] {
+  background: rgba(255, 102, 0, 0.1) !important;
+}
+
+body[data-theme="bloomberg-dark"] [style*="background: #dcfce7"],
+body[data-theme="bloomberg-dark"] [style*="background:#dcfce7"] {
+  background: rgba(0, 255, 0, 0.1) !important;
+}
+
+body[data-theme="bloomberg-dark"] [style*="background: #fef3c7"],
+body[data-theme="bloomberg-dark"] [style*="background:#fef3c7"] {
+  background: rgba(255, 102, 0, 0.15) !important;
+}
+
+/* 修复内联颜色样式 */
+body[data-theme="bloomberg-dark"] [style*="color: #374151"],
+body[data-theme="bloomberg-dark"] [style*="color:#374151"],
+body[data-theme="bloomberg-dark"] [style*="color: #1f2937"],
+body[data-theme="bloomberg-dark"] [style*="color:#1f2937"] {
+  color: #00ff00 !important;
+}
+
+body[data-theme="bloomberg-dark"] [style*="color: #6b7280"],
+body[data-theme="bloomberg-dark"] [style*="color:#6b7280"],
+body[data-theme="bloomberg-dark"] [style*="color: #9ca3af"],
+body[data-theme="bloomberg-dark"] [style*="color:#9ca3af"] {
+  color: #669966 !important;
+}
+
+body[data-theme="bloomberg-dark"] [style*="color: #1e40af"],
+body[data-theme="bloomberg-dark"] [style*="color:#1e40af"],
+body[data-theme="bloomberg-dark"] [style*="color: #166534"],
+body[data-theme="bloomberg-dark"] [style*="color:#166534"] {
+  color: #ff6600 !important;
+}
+
+/* 修复边框样式 */
+body[data-theme="bloomberg-dark"] [style*="border: 1px solid #e5e7eb"],
+body[data-theme="bloomberg-dark"] [style*="border:1px solid #e5e7eb"],
+body[data-theme="bloomberg-dark"] [style*="border: 1px solid #d1d5db"],
+body[data-theme="bloomberg-dark"] [style*="border:1px solid #d1d5db"] {
+  border-color: #1a1a1a !important;
+}
+
+body[data-theme="bloomberg-dark"] [style*="border: 1px solid #93c5fd"],
+body[data-theme="bloomberg-dark"] [style*="border:1px solid #93c5fd"],
+body[data-theme="bloomberg-dark"] [style*="border: 1px solid #86efac"],
+body[data-theme="bloomberg-dark"] [style*="border:1px solid #86efac"],
+body[data-theme="bloomberg-dark"] [style*="border: 1px solid #fcd34d"],
+body[data-theme="bloomberg-dark"] [style*="border:1px solid #fcd34d"] {
+  border-color: #ff6600 !important;
+}
+
+/* 修复圆角 */
+body[data-theme="bloomberg-dark"] [style*="border-radius: 6px"],
+body[data-theme="bloomberg-dark"] [style*="border-radius:6px"],
+body[data-theme="bloomberg-dark"] [style*="border-radius: 8px"],
+body[data-theme="bloomberg-dark"] [style*="border-radius:8px"] {
+  border-radius: 0 !important;
 }

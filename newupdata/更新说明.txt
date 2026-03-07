@@ -1,0 +1,78 @@
+便携版更新说明
+==============
+
+修改的文件：
+- backend/src/api/config.py
+- backend/src/models/config.py
+- backend/src/services/mingdao.py
+- backend/src/src/api/config.py
+- backend/src/src/models/config.py
+- backend/src/src/services/mingdao.py
+- backend/migrate_db.py
+- backend/运行数据库迁移.bat
+
+【重要】已修复的问题：
+- 数据库缺少 user_id 列的问题
+- 数据库缺少 is_private 和 private_api_url 列的问题
+
+文件位置：
+newupdata/
+├── 更新说明.txt
+└── backend/
+    ├── src/
+    │   ├── api/
+    │   │   └── config.py
+    │   ├── models/
+    │   │   └── config.py
+    │   ├── services/
+    │   │   └── mingdao.py
+    │   └── src/
+    │       ├── api/
+    │       │   └── config.py
+    │       ├── models/
+    │       │   └── config.py
+    │       └── services/
+    │           └── mingdao.py
+    ├── migrate_db.py
+    └── 运行数据库迁移.bat
+
+更新步骤：
+==========
+
+1. 停止便携版程序
+   - 如果正在运行，请先关闭
+
+2. 替换文件
+   将 newupdata 文件夹中的所有文件复制到便携版根目录
+   （即 pb-bi-portable/ 文件夹下）
+   
+   直接将 newupdata/backend 下的内容复制到 pb-bi-portable/backend/ 覆盖即可
+
+3. 运行数据库迁移（两种方法任选其一）
+   
+   方法一（推荐）：
+   - 进入 pb-bi-portable/backend/ 目录
+   - 双击运行 "运行数据库迁移.bat"
+   
+   方法二：
+   - 进入 pb-bi-portable/backend/ 目录
+   - 打开命令行，执行：
+     ..\runtime\python\python.exe migrate_db.py
+   
+   应该会看到输出：
+   "检查 data_flows 表结构..."
+   "现有列: [...]"
+   "添加 user_id 列..."  (如果需要)
+   "添加 is_private 列..."  (如果需要)
+   "添加 private_api_url 列..."  (如果需要)
+   "数据库迁移完成！"
+
+4. 重新启动便携版
+   - 运行 start.bat 或分别启动前后端
+
+更新内容：
+=========
+- 修复了数据流无法保存的问题
+- 添加了私有化部署支持
+- 支持自定义明道云API地址
+- 修复了数据库缺少 user_id 字段的问题

@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ThemedChart from './ThemedChart'
 import { useEffect, useState } from 'react'
 import 'echarts-gl'
 import { getColorList, getSingleColor } from '../../utils/colorSchemes'
@@ -188,7 +188,7 @@ function Surface3DChart({ data, config = {} }) {
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />
+      <ThemedChart option={option} style={{ height: '100%', width: '100%' }} />
       {chartData.length === 0 && (
         <div style={{ 
           position: 'absolute', 

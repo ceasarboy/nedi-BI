@@ -71,3 +71,20 @@ class MingDaoService:
             return result.get("error_code") == 1 or result.get("success") == True
         except Exception:
             return False
+
+    def get_data(self, worksheet_id: str, field_ids: Optional[List[str]] = None, page_index: int = 1, page_size: int = 100) -> List[Dict]:
+        url = f"{self.base_url}/v3/app/worksheets/{worksheet_id}/rows/list"
+        payload = {
+            "pageIndex": page_index,
+            "pageSize": page_size
+        }
+        if field_ids:
+            payload["fields"] = field_ids
+        
+        response = requests.post(url, headers=self.headers, json=payload, timeout=30)
+        result = response.json()
+        
+        if result.get("error_code") == 1:
+            return result.get("data", {}).get("rows", [])
+        else:
+            raise Exception(result.get("error_msg", "Unknown error"))

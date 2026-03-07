@@ -8,7 +8,13 @@ import GuidePage from './pages/GuidePage'
 import CorrelationPage from './pages/CorrelationPage'
 import MonteCarloPage from './pages/MonteCarloPage'
 import LoginPage from './pages/LoginPage'
+import AIPage from './pages/AIPage'
+import SettingsPage, { applyUISettingsFromLocal } from './pages/SettingsPage'
+import './styles/variables.css'
+import './styles/AnalysisComponents.css'
 import './App.css'
+
+applyUISettingsFromLocal()
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -59,6 +65,8 @@ const AppContent = () => {
           <NavLink to="/montecarlo" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>蒙特卡洛</NavLink>
           <NavLink to="/correlation" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>相关性</NavLink>
           <NavLink to="/visual" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>可视化</NavLink>
+          <NavLink to="/ai" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ background: '#1890ff', color: 'white', borderRadius: '6px' }}>🤖 AI助手</NavLink>
+          <NavLink to="/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>⚙️ 设置</NavLink>
           <NavLink to="/guide" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ background: '#10b981', color: 'white', borderRadius: '6px' }}>操作指南</NavLink>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -117,6 +125,16 @@ const AppContent = () => {
           <Route path="/guide" element={
             <ProtectedRoute>
               <GuidePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/ai" element={
+            <ProtectedRoute>
+              <AIPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <SettingsPage />
             </ProtectedRoute>
           } />
         </Routes>

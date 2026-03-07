@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ThemedChart from './ThemedChart'
 import { getSingleColor } from '../../utils/colorSchemes'
 
 function GaugeChart({ data, config = {} }) {
@@ -83,7 +83,7 @@ function GaugeChart({ data, config = {} }) {
     ]
   }
 
-  return <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />
+  return <ThemedChart option={option} style={{ height: '100%', width: '100%' }} />
 }
 
 export default GaugeChart

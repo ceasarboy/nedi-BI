@@ -95,3 +95,21 @@ async def get_current_user(
         success=True,
         user=UserResponse.model_validate(user)
     )
+
+
+async def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
+    """可选的用户认证，不强制要求登录"""
+    try:
+        token = request.cookies.get("session_token")
+        if not token:
+            return None
+        
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+        
+        user = get_user_by_id(db, int(user_id))
+        return user
+    except:
+        return None

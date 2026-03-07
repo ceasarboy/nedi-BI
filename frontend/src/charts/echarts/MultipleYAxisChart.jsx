@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ThemedChart from './ThemedChart'
 import { getColorList } from '../../utils/colorSchemes'
 
 function MultipleYAxisChart({ data, config = {} }) {
@@ -62,7 +62,7 @@ function MultipleYAxisChart({ data, config = {} }) {
     series: series
   }
 
-  return <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />
+  return <ThemedChart option={option} style={{ height: '100%', width: '100%' }} />
 }
 
 export default MultipleYAxisChart

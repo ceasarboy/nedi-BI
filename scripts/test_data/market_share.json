@@ -1,0 +1,6 @@
+[
+  {"product": "产品A", "market_share": 35},
+  {"product": "产品B", "market_share": 28},
+  {"product": "产品C", "market_share": 20},
+  {"product": "其他", "market_share": 17}
+]

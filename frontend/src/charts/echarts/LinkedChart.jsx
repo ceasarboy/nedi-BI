@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ThemedChart from './ThemedChart'
 import { useEffect, useState, useRef } from 'react'
 import { getColorList } from '../../utils/colorSchemes'
 
@@ -180,7 +180,7 @@ function LinkedChart({ data, config = {} }) {
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
-      <ReactECharts
+      <ThemedChart
         ref={chartRef}
         option={getOption()}
         style={{ height: '100%', width: '100%' }}

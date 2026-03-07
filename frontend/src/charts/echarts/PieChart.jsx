@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ThemedChart from './ThemedChart'
 import { getColorList } from '../../utils/colorSchemes'
 
 function PieChart({ data, config = {} }) {
@@ -55,7 +55,7 @@ function PieChart({ data, config = {} }) {
     ]
   }
 
-  return <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />
+  return <ThemedChart option={option} style={{ height: '100%', width: '100%' }} />
 }
 
 export default PieChart
