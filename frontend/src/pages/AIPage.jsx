@@ -162,6 +162,7 @@ function AIPage() {
       const decoder = new TextDecoder()
       let buffer = ''
       let fullContent = ''
+      let streamDone = false
 
       setMessages(prev => prev.map((msg, idx) =>
         idx === prev.length - 1 ? { ...msg, thinking: false } : msg
@@ -179,7 +180,11 @@ function AIPage() {
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6)
-            if (data === '[DONE]') continue
+            if (data === '[DONE]') {
+              // 流结束，标记为完成
+              streamDone = true
+              break
+            }
             
             try {
               const event = JSON.parse(data)
@@ -222,14 +227,19 @@ function AIPage() {
                   timestamp: Date.now()
                 }])
                 
-                if (result && result.success && result.chart_url) {
-                  const chartMarkdown = `\n\n![${result.title || '图表'}](${result.chart_url})\n`
+                // 检查图表URL - 可能在 result.chart_url 或 result.data.chart_url
+                const chartUrl = result?.chart_url || result?.data?.chart_url
+                const chartTitle = result?.title || result?.data?.title || '图表'
+                
+                if (result && result.success && chartUrl) {
+                  const chartMarkdown = `\n\n![${chartTitle}](${chartUrl})\n`
                   fullContent += chartMarkdown
                   setMessages(prev => prev.map((msg, idx) =>
                     idx === prev.length - 1 ? { ...msg, content: fullContent } : msg
                   ))
                 } else if (result && !result.success) {
-                  fullContent += `\n\n❌ 工具执行失败: ${result.error || '未知错误'}\n`
+                  const errorMsg = result?.error || result?.data?.error || '未知错误'
+                  fullContent += `\n\n❌ 工具执行失败: ${errorMsg}\n`
                   setMessages(prev => prev.map((msg, idx) =>
                     idx === prev.length - 1 ? { ...msg, content: fullContent } : msg
                   ))
@@ -245,6 +255,9 @@ function AIPage() {
             }
           }
         }
+        
+        // 检查是否需要退出 while 循环
+        if (streamDone) break
       }
 
       if (currentSessionId && fullContent) {

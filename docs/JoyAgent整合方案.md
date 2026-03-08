@@ -35,7 +35,7 @@
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    PB-BI Backend (FastAPI)                             │
-│                    http://localhost:8000                                │
+│                    http://localhost:8001                                │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
 │  │ 数据流API   │  │ 快照API    │  │ 向量API    │  │ 图表推荐API │   │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘   │
@@ -165,7 +165,7 @@ class AnalyzeDataTool(BaseTool):
 ```yaml
 # application.yml (JoyAgent配置)
 
-mcp_server_url: "http://localhost:8000/mcp"
+mcp_server_url: "http://localhost:8001/mcp"
 ```
 
 ### 4.3 API对接

@@ -78,7 +78,7 @@ class BaseChartTool(ABC):
         """创建标准返回结果"""
         # 如果是相对路径，转换为完整URL
         if chart_url.startswith("/api/charts/"):
-            full_url = f"http://localhost:8000{chart_url}"
+            full_url = f"http://localhost:8001{chart_url}"
         else:
             full_url = chart_url
         

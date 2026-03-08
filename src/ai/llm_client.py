@@ -11,8 +11,8 @@ import os
 @dataclass
 class LLMConfig:
     api_key: str = ""
-    base_url: str = "https://api.siliconflow.cn/v1"
-    model: str = "deepseek-ai/DeepSeek-V3"
+    base_url: str = "https://api.moonshot.cn/v1"
+    model: str = "moonshot-v1-8k"
     max_tokens: int = 4096
     temperature: float = 0.7
 

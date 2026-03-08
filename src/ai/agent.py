@@ -22,8 +22,8 @@ SYSTEM_PROMPT = """你是PB-BI智能数据分析助手，帮助用户查询和�
 - 不要使用其他语言（如英语、泰语、日语等）
 
 ## 服务器信息
-- 后端服务地址: http://localhost:8000
-- 图表访问地址: http://localhost:8000/api/charts/
+- 后端服务地址: http://localhost:8001
+- 图表访问地址: http://localhost:8001/api/charts/
 
 ## 你的能力
 1. 查询数据流列表和详情
@@ -67,7 +67,7 @@ SYSTEM_PROMPT = """你是PB-BI智能数据分析助手，帮助用户查询和�
      - `pbbi_generate_stacked_line_chart` - 堆叠折线图（趋势构成）
      - `pbbi_generate_linked_chart` - 联动图表（折线图+饼图）
 3. 工具返回的chart_url需要拼接完整地址
-4. **必须使用markdown图片格式展示图表**: `![图表标题](http://localhost:8000/api/charts/xxx.png)`
+4. **必须使用markdown图片格式展示图表**: `![图表标题](http://localhost:8001/api/charts/xxx.png)`
 5. 不要只显示URL文本，必须用图片格式让用户直接看到图表
 
 ### 重要提示：
@@ -75,11 +75,14 @@ SYSTEM_PROMPT = """你是PB-BI智能数据分析助手，帮助用户查询和�
 - 生成图表时需要指定正确的字段名
 - 图表生成后必须返回完整的可访问URL给用户
 
-## 回复格式
+## 回复格式要求（必须遵守）
 - 使用清晰的中文回复
 - 数据用表格或列表展示
 - 分析结论要简洁明了
 - 生成图表后，显示完整图表URL让用户查看
+- **绝对禁止**在回复中包含`<tool_call>`、`<arg_key>`、`<arg_value>`等标签
+- 工具调用应该通过API的function calling机制完成，而不是在文本中输出
+- 如果工具调用失败，直接告诉用户错误信息，不要输出工具调用的XML格式
 
 ## 当前日期
 {{current_date}}
@@ -149,8 +152,13 @@ class PBBIAgent:
     
     def _parse_text_tool_calls(self, text: str) -> List[Dict]:
         """解析文本格式工具调用 - 使用通用解析器"""
+        print(f"[DEBUG] _parse_text_tool_calls called with text length: {len(text)}")
+        print(f"[DEBUG] _parse_text_tool_calls text preview: {repr(text[:200])}")
         tool_calls = parse_tool_calls(text)
-        return tool_calls_to_openai_format(tool_calls)
+        print(f"[DEBUG] parse_tool_calls returned {len(tool_calls)} tool calls")
+        result = tool_calls_to_openai_format(tool_calls)
+        print(f"[DEBUG] tool_calls_to_openai_format returned {len(result)} items")
+        return result
     
     def _analyze_user_intent(self, query: str) -> str:
         """分析用户意图"""
@@ -211,6 +219,41 @@ class PBBIAgent:
         else:
             return result.get("error", "执行失败")[:50]
     
+    def _filter_tool_call_tags(self, content: str) -> str:
+        """过滤掉工具调用标签，返回给用户友好的内容"""
+        import re
+        
+        # 定义需要过滤的模式
+        patterns_to_filter = [
+            # XML格式的工具调用
+            (r'<tool_call>.*?</tool_call>', ''),
+            (r'<arg_key>.*?</arg_key>', ''),
+            (r'<arg_value>.*?</arg_value>', ''),
+            # 其他工具调用格式
+            (r'<｜tool▁calls▁begin｜>.*?<｜tool▁calls▁end｜>', '', re.DOTALL),
+            (r'<｜tool▁call▁begin｜>.*?<｜tool▁call▁end｜>', '', re.DOTALL),
+            (r'```tool_call.*?```', '', re.DOTALL),
+            (r'```tool.*?```', '', re.DOTALL),
+            (r'✿FUNCTION✿.*?✿END✿', '', re.DOTALL),
+            (r'✿CALL✿.*?✿RESULT✿', '', re.DOTALL),
+            # Python函数调用格式
+            (r'pbbi_\w+\s*\([^)]*\)', ''),
+            # 纯文本参数格式
+            (r'pbbi_\w+\s*\n(?:\s*\w+\s*=.*\n?)+', ''),
+        ]
+        
+        result = content
+        for pattern in patterns_to_filter:
+            if len(pattern) == 3:
+                result = re.sub(pattern[0], pattern[1], result, flags=pattern[2])
+            else:
+                result = re.sub(pattern[0], pattern[1], result)
+        
+        # 清理多余的空行
+        result = re.sub(r'\n{3,}', '\n\n', result)
+        
+        return result.strip()
+    
     def _is_tool_call_content(self, content: str) -> bool:
         """检测内容是否是工具调用格式，需要过滤掉不显示给用户"""
         tool_call_patterns = [
@@ -232,6 +275,15 @@ class PBBIAgent:
         for pattern in tool_call_patterns:
             if pattern in content:
                 return True
+        
+        # 检测GLM-5的工具调用格式：pbbi_xxx(
+        import re
+        if re.search(r'pbbi_\w+\s*\(', content):
+            return True
+        
+        # 检测GLM-5的纯文本格式：pbbi_xxx\nparam=value
+        if re.search(r'pbbi_\w+\s*\n\s*\w+\s*=', content):
+            return True
         
         return False
     
@@ -272,19 +324,23 @@ class PBBIAgent:
             
             content = delta.get("content")
             if content:
-                if self._is_tool_call_content(content):
-                    print(f"[DEBUG] Tool call content detected, filtering: {repr(content[:50])}...")
-                    full_response += content
-                else:
+                # 过滤掉工具调用标签，不让用户看到
+                filtered_content = self._filter_tool_call_tags(content)
+                if filtered_content:
                     print(f"[DEBUG] Content chunk: {repr(content[:50])}...")
                     full_response += content
                     yield {
                         "type": "content",
-                        "content": content
+                        "content": filtered_content
                     }
+                else:
+                    print(f"[DEBUG] Tool call content filtered: {repr(content[:50])}...")
+                    full_response += content
             
             if "tool_calls" in delta:
+                print(f"[DEBUG] API tool_calls in delta: {delta['tool_calls']}")
                 for tc in delta["tool_calls"]:
+                    print(f"[DEBUG] Processing tool call: index={tc.get('index')}, id={tc.get('id')}, function={tc.get('function', {})}")
                     idx = tc.get("index", 0)
                     
                     if idx >= len(tool_calls_buffer):
@@ -305,6 +361,11 @@ class PBBIAgent:
         
         if tool_calls_buffer:
             tool_names = [tc["function"]["name"] for tc in tool_calls_buffer]
+            
+            # 打印完整的工具调用参数
+            for i, tc in enumerate(tool_calls_buffer):
+                print(f"[DEBUG] Tool call {i}: name={tc['function']['name']}, arguments={repr(tc['function']['arguments'])}")
+            
             yield {
                 "type": "thinking",
                 "stage": "tool_planning",
@@ -324,9 +385,13 @@ class PBBIAgent:
             
             for i, tc in enumerate(tool_calls_buffer):
                 tool_name = tc["function"]["name"]
+                args_str = tc["function"]["arguments"]
+                print(f"[DEBUG] Parsing arguments for {tool_name}: {repr(args_str)}")
                 try:
-                    args = json.loads(tc["function"]["arguments"])
-                except:
+                    args = json.loads(args_str)
+                    print(f"[DEBUG] Parsed args: {args}")
+                except Exception as e:
+                    print(f"[DEBUG] Failed to parse arguments: {e}")
                     args = {}
                 
                 tool_display_name = self._get_tool_display_name(tool_name)
@@ -346,6 +411,69 @@ class PBBIAgent:
                 }
                 
                 result = await self.tool_executor.execute(tool_name, args)
+                
+                # 检查是否需要重试（字段验证失败等情况）
+                if result.get("needs_retry"):
+                    yield {
+                        "type": "thinking",
+                        "stage": "error_correction",
+                        "message": f"检测到错误，正在自动修正..."
+                    }
+                    
+                    # 将错误信息反馈给LLM
+                    error_message = f"工具执行失败: {result.get('error')}\n请根据可用字段修正参数后重试。"
+                    if result.get("available_fields"):
+                        error_message += f"\n可用字段: {', '.join(result['available_fields'][:10])}"
+                    
+                    # 构建重试消息
+                    retry_messages = messages.copy()
+                    retry_messages.append({
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [tc]
+                    })
+                    retry_messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc["id"],
+                        "content": json.dumps(result, ensure_ascii=False)
+                    })
+                    
+                    # 让LLM重新生成正确的工具调用
+                    retry_success = False
+                    async for chunk in self.llm_client.chat(retry_messages, tools, stream=True):
+                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+                        
+                        if "tool_calls" in delta:
+                            for retry_tc in delta["tool_calls"]:
+                                if retry_tc.get("function", {}).get("name"):
+                                    retry_tool_name = retry_tc["function"]["name"]
+                                    try:
+                                        retry_args = json.loads(retry_tc["function"].get("arguments", "{}"))
+                                    except:
+                                        retry_args = {}
+                                    
+                                    # 执行修正后的工具调用
+                                    retry_result = await self.tool_executor.execute(retry_tool_name, retry_args)
+                                    
+                                    if retry_result.get("success"):
+                                        retry_success = True
+                                        result = retry_result
+                                        
+                                        yield {
+                                            "type": "thinking",
+                                            "stage": "correction_success",
+                                            "message": "自动修正成功！"
+                                        }
+                                        
+                                        # 更新消息
+                                        tc["function"]["arguments"] = json.dumps(retry_args, ensure_ascii=False)
+                    
+                    if not retry_success:
+                        yield {
+                            "type": "thinking",
+                            "stage": "correction_failed",
+                            "message": "自动修正失败，将显示错误信息"
+                        }
                 
                 result_summary = self._get_result_summary(result)
                 yield {
@@ -371,6 +499,11 @@ class PBBIAgent:
                 yield chunk
         else:
             text_tool_calls = self._parse_text_tool_calls(full_response)
+            
+            print(f"[DEBUG] Parsed text tool calls: {len(text_tool_calls)} from response length {len(full_response)}")
+            if text_tool_calls:
+                for tc in text_tool_calls:
+                    print(f"[DEBUG] Tool: {tc['function']['name']}, args: {tc['function']['arguments'][:100] if tc['function'].get('arguments') else 'empty'}")
             
             if text_tool_calls:
                 tool_names = [tc["function"]["name"] for tc in text_tool_calls]
@@ -442,7 +575,16 @@ class PBBIAgent:
                 self.conversation_history.append({"role": "user", "content": user_input})
                 self.conversation_history.append({"role": "assistant", "content": full_response})
     
-    async def _continue_conversation(self, messages: List[Dict]) -> AsyncGenerator[Dict[str, Any], None]:
+    async def _continue_conversation(self, messages: List[Dict], depth: int = 0) -> AsyncGenerator[Dict[str, Any], None]:
+        # 限制递归深度，防止无限循环
+        if depth > 3:
+            yield {
+                "type": "thinking",
+                "stage": "max_depth_reached",
+                "message": "已达到最大对话深度，结束对话"
+            }
+            return
+        
         full_response = ""
         
         async for chunk in self.llm_client.chat(messages, stream=True):
@@ -456,16 +598,232 @@ class PBBIAgent:
                     "content": content
                 }
         
-        if len(messages) >= 2:
-            last_user = None
-            for msg in reversed(messages):
-                if msg["role"] == "user":
-                    last_user = msg["content"]
-                    break
+        # 检查是否有文本工具调用
+        text_tool_calls = self._parse_text_tool_calls(full_response)
+        
+        print(f"[DEBUG] _continue_conversation: Parsed {len(text_tool_calls)} text tool calls from response length {len(full_response)}")
+        print(f"[DEBUG] _continue_conversation: full_response = {repr(full_response[:500])}")
+        
+        if text_tool_calls:
+            tool_names = [tc["function"]["name"] for tc in text_tool_calls]
             
-            if last_user:
-                self.conversation_history.append({"role": "user", "content": last_user})
-            self.conversation_history.append({"role": "assistant", "content": full_response})
+            yield {
+                "type": "thinking",
+                "stage": "tool_planning",
+                "message": f"计划执行 {len(tool_names)} 个工具: {', '.join([self._get_tool_display_name(n) for n in tool_names])}"
+            }
+            
+            yield {
+                "type": "tool_calls",
+                "tools": tool_names
+            }
+            
+            messages.append({
+                "role": "assistant",
+                "content": full_response
+            })
+            
+            for i, tc in enumerate(text_tool_calls):
+                tool_name = tc["function"]["name"]
+                try:
+                    args = json.loads(tc["function"]["arguments"])
+                except:
+                    args = {}
+                
+                tool_display_name = self._get_tool_display_name(tool_name)
+                yield {
+                    "type": "tool_call_start",
+                    "tool": tool_name,
+                    "display_name": tool_display_name,
+                    "arguments": args,
+                    "step": i + 1,
+                    "total": len(text_tool_calls)
+                }
+                
+                yield {
+                    "type": "thinking",
+                    "stage": "tool_executing",
+                    "message": f"正在执行: {tool_display_name}..."
+                }
+                
+                result = await self.tool_executor.execute(tool_name, args)
+                
+                # 检查是否需要重试（字段验证失败等情况）
+                if result.get("needs_retry"):
+                    yield {
+                        "type": "thinking",
+                        "stage": "error_correction",
+                        "message": f"⚠️ 工具执行失败: {result.get('error', '未知错误')}，正在尝试自动修正..."
+                    }
+                    
+                    # 构建详细的错误反馈信息
+                    error_feedback = f"""工具调用失败，需要修正参数：
+
+**错误信息**: {result.get('error', '未知错误')}
+
+**原始调用**:
+- 工具: {tool_name}
+- 参数: {json.dumps(args, ensure_ascii=False)}
+
+**修正要求**:
+1. 检查字段名是否正确
+2. 参考可用字段列表选择正确的字段名
+3. 重新生成工具调用
+
+**可用字段**:
+{chr(10).join([f"- {field}" for field in result.get('available_fields', [])[:15]])}
+{('...' if len(result.get('available_fields', [])) > 15 else '')}
+
+请使用正确的字段名重新生成工具调用。"""
+                    
+                    # 构建重试消息
+                    retry_messages = messages.copy()
+                    retry_messages.append({
+                        "role": "assistant",
+                        "content": full_response
+                    })
+                    retry_messages.append({
+                        "role": "user",
+                        "content": error_feedback
+                    })
+                    
+                    yield {
+                        "type": "thinking",
+                        "stage": "retrying",
+                        "message": "正在请求AI重新生成正确的工具调用..."
+                    }
+                    
+                    # 让LLM重新生成正确的工具调用
+                    retry_full_response = ""
+                    retry_success = False
+                    
+                    async for chunk in self.llm_client.chat(retry_messages, stream=True):
+                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+                        content = delta.get("content", "")
+                        
+                        if content:
+                            retry_full_response += content
+                            # 实时显示AI的思考过程
+                            if len(content) > 10:  # 只显示有意义的内容
+                                yield {
+                                    "type": "thinking",
+                                    "stage": "ai_thinking",
+                                    "message": content[:100] + ("..." if len(content) > 100 else "")
+                                }
+                    
+                    # 解析重试响应中的工具调用
+                    if retry_full_response:
+                        retry_tool_calls = self._parse_text_tool_calls(retry_full_response)
+                        
+                        if retry_tool_calls:
+                            yield {
+                                "type": "thinking",
+                                "stage": "retry_tool_detected",
+                                "message": f"检测到 {len(retry_tool_calls)} 个修正后的工具调用"
+                            }
+                            
+                            for retry_tc in retry_tool_calls:
+                                retry_tool_name = retry_tc["function"]["name"]
+                                try:
+                                    retry_args = json.loads(retry_tc["function"]["arguments"])
+                                except:
+                                    retry_args = {}
+                                
+                                yield {
+                                    "type": "tool_call_start",
+                                    "tool": retry_tool_name,
+                                    "display_name": self._get_tool_display_name(retry_tool_name),
+                                    "arguments": retry_args,
+                                    "step": 1,
+                                    "total": 1,
+                                    "is_retry": True
+                                }
+                                
+                                # 执行修正后的工具调用
+                                retry_result = await self.tool_executor.execute(retry_tool_name, retry_args)
+                                
+                                if retry_result.get("success"):
+                                    retry_success = True
+                                    result = retry_result
+                                    
+                                    yield {
+                                        "type": "thinking",
+                                        "stage": "correction_success",
+                                        "message": "✅ 自动修正成功！图表已生成。"
+                                    }
+                                    
+                                    yield {
+                                        "type": "tool_result",
+                                        "tool": retry_tool_name,
+                                        "result": retry_result,
+                                        "summary": self._get_result_summary(retry_result),
+                                        "is_retry": True
+                                    }
+                                else:
+                                    yield {
+                                        "type": "thinking",
+                                        "stage": "correction_failed",
+                                        "message": f"❌ 自动修正仍然失败: {retry_result.get('error', '未知错误')}"
+                                    }
+                                    
+                                    yield {
+                                        "type": "tool_result",
+                                        "tool": retry_tool_name,
+                                        "result": retry_result,
+                                        "summary": f"修正失败: {retry_result.get('error', '未知错误')}",
+                                        "is_retry": True
+                                    }
+                        else:
+                            yield {
+                                "type": "thinking",
+                                "stage": "no_retry_tool",
+                                "message": "AI没有生成修正后的工具调用"
+                            }
+                    
+                    if not retry_success:
+                        yield {
+                            "type": "thinking",
+                            "stage": "correction_failed",
+                            "message": "❌ 自动修正失败，请检查字段名是否正确"
+                        }
+                
+                result_summary = self._get_result_summary(result)
+                yield {
+                    "type": "tool_result",
+                    "tool": tool_name,
+                    "result": result,
+                    "summary": result_summary
+                }
+                
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc["id"],
+                    "content": json.dumps(result, ensure_ascii=False)
+                })
+            
+            # 继续对话
+            yield {
+                "type": "thinking",
+                "stage": "generating_response",
+                "message": "正在整理结果..."
+            }
+            
+            async for chunk in self._continue_conversation(messages, depth + 1):
+                yield chunk
+        else:
+            if len(messages) >= 2:
+                last_user = None
+                for msg in reversed(messages):
+                    if msg["role"] == "user":
+                        last_user = msg["content"]
+                        break
+                
+                if last_user:
+                    self.conversation_history.append({"role": "user", "content": last_user})
+                self.conversation_history.append({"role": "assistant", "content": full_response})
+        
+        # 发送结束标记
+        yield {"type": "done"}
     
     def clear_history(self):
         self.conversation_history = []

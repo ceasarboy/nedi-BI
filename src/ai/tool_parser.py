@@ -190,6 +190,164 @@ class GLMToolCallParser(ToolCallParser):
         return tool_calls
 
 
+class GLM5TextParser(ToolCallParser):
+    """GLM-5纯文本格式解析器
+    
+    处理GLM-5输出的纯文本工具调用格式：
+    ࿿tool_name⋘
+    {
+        "param1": "value1",
+        "param2": "value2"
+    }
+    ⛔
+    """
+    
+    def detect(self, content: str) -> bool:
+        return '⋘' in content and '⛔' in content
+    
+    def parse(self, content: str) -> List[ToolCall]:
+        tool_calls = []
+        
+        # GLM-5格式：࿏tool_name⋘\n{json params}\n⛔
+        pattern = r'࿏(\w+)⋘\s*\n?\s*(\{.*?\})\s*\n?\s*⛔'
+        matches = re.findall(pattern, content, re.DOTALL)
+        
+        seen_tools = set()
+        
+        for match in matches:
+            tool_name = match[0]
+            if tool_name in seen_tools:
+                continue
+            seen_tools.add(tool_name)
+            
+            try:
+                args = json.loads(match[1])
+            except:
+                args = {}
+            
+            tool_calls.append(ToolCall(
+                id=f"call_{len(tool_calls)}",
+                name=tool_name,
+                arguments=args
+            ))
+        
+        return tool_calls
+
+
+class GLM5PythonCallParser(ToolCallParser):
+    """GLM-5 Python函数调用格式解析器
+    
+    处理GLM-5输出的格式：
+    tool_name(param1=value1, param2=value2)
+    """
+    
+    def detect(self, content: str) -> bool:
+        # 检测是否包含pbbi_工具名(参数)格式
+        return bool(re.search(r'pbbi_\w+\s*\([^)]+\)', content))
+    
+    def parse(self, content: str) -> List[ToolCall]:
+        tool_calls = []
+        
+        # 匹配 tool_name(param1=value1, param2=value2) 格式
+        pattern = r'(pbbi_\w+)\s*\(([^)]*)\)'
+        matches = re.findall(pattern, content)
+        
+        for match in matches:
+            tool_name = match[0]
+            params_str = match[1]
+            
+            # 解析参数
+            args = {}
+            if params_str.strip():
+                # 分割参数
+                param_pairs = re.findall(r'([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([^,]+)', params_str)
+                for key, value in param_pairs:
+                    key = key.strip()
+                    value = value.strip()
+                    
+                    # 尝试解析值类型
+                    try:
+                        args[key] = json.loads(value)
+                    except:
+                        try:
+                            if '.' in value:
+                                args[key] = float(value)
+                            else:
+                                args[key] = int(value)
+                        except:
+                            # 移除引号
+                            if (value.startswith('"') and value.endswith('"')) or \
+                               (value.startswith("'") and value.endswith("'")):
+                                args[key] = value[1:-1]
+                            else:
+                                args[key] = value
+            
+            tool_calls.append(ToolCall(
+                id=f"call_{len(tool_calls)}",
+                name=tool_name,
+                arguments=args
+            ))
+        
+        return tool_calls
+
+
+class GLM5PlainTextParser(ToolCallParser):
+    """GLM-5纯文本参数格式解析器
+    
+    处理GLM-5输出的格式：
+    tool_name
+    param1=value1
+    param2=value2
+    """
+    
+    def detect(self, content: str) -> bool:
+        # 检测是否包含pbbi_工具名
+        return 'pbbi_' in content and '=' in content
+    
+    def parse(self, content: str) -> List[ToolCall]:
+        tool_calls = []
+        
+        # 匹配工具名和参数
+        # 格式：tool_name\nparam1=value1\nparam2=value2
+        pattern = r'(pbbi_\w+)\s*\n((?:[a-zA-Z_][a-zA-Z0-9_]*=.*\n?)+)'
+        matches = re.findall(pattern, content)
+        
+        for match in matches:
+            tool_name = match[0]
+            params_str = match[1]
+            
+            # 解析参数
+            args = {}
+            for line in params_str.strip().split('\n'):
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    
+                    # 尝试解析值类型
+                    try:
+                        # 尝试解析为JSON
+                        args[key] = json.loads(value)
+                    except:
+                        # 尝试解析为数字
+                        try:
+                            if '.' in value:
+                                args[key] = float(value)
+                            else:
+                                args[key] = int(value)
+                        except:
+                            # 保持字符串
+                            args[key] = value
+            
+            tool_calls.append(ToolCall(
+                id=f"call_{len(tool_calls)}",
+                name=tool_name,
+                arguments=args
+            ))
+        
+        return tool_calls
+
+
 class QwenToolCallParser(ToolCallParser):
     """通义千问格式解析器"""
     
@@ -343,16 +501,64 @@ class JSONToolCallParser(ToolCallParser):
         return tool_calls
 
 
+class KimiToolCallParser(ToolCallParser):
+    """Kimi特殊格式解析器
+    
+    处理Kimi输出的格式：
+    <|tool_calls_section_begin|><|tool_call_begin|>functions.tool_name:id<|tool_call_argument_begin|>{"param": "value"}<|tool_call_end|>
+    """
+    
+    def detect(self, content: str) -> bool:
+        return '<|tool_calls_section_begin|>' in content and '<|tool_call_begin|>' in content
+    
+    def parse(self, content: str) -> List[ToolCall]:
+        tool_calls = []
+        
+        # 提取 tool_calls_section 部分
+        section_match = re.search(r'<\|tool_calls_section_begin\|>(.*?)<\|tool_calls_section_end\|>', content, re.DOTALL)
+        if not section_match:
+            return tool_calls
+        
+        section = section_match.group(1)
+        
+        # 匹配每个工具调用
+        # 格式: <|tool_call_begin|>functions.tool_name:id<|tool_call_argument_begin|>{"param": "value"}<|tool_call_end|>
+        pattern = r'<\|tool_call_begin\|>(functions\.\w+):(\d+)<\|tool_call_argument_begin\|>(\{.*?\})<\|tool_call_end\|>'
+        matches = re.findall(pattern, section, re.DOTALL)
+        
+        for match in matches:
+            tool_name = match[0].replace('functions.', '')  # 移除 functions. 前缀
+            tool_id = match[1]
+            args_str = match[2]
+            
+            try:
+                args = json.loads(args_str)
+            except:
+                args = {}
+            
+            tool_calls.append(ToolCall(
+                id=f"kimi_{tool_id}",
+                name=tool_name,
+                arguments=args
+            ))
+        
+        return tool_calls
+
+
 class ToolCallParserRegistry:
     """工具调用解析器注册表"""
     
     def __init__(self):
         self.parsers: List[ToolCallParser] = [
+            KimiToolCallParser(),  # 优先检测Kimi格式
             OpenAIToolCallParser(),
             DeepSeekDSMLParser(),
             MinimaxToolCallParser(),
             AnthropicToolCallParser(),
             GLMToolCallParser(),
+            GLM5TextParser(),
+            GLM5PythonCallParser(),
+            GLM5PlainTextParser(),
             QwenToolCallParser(),
             JSONToolCallParser(),
         ]
@@ -361,7 +567,9 @@ class ToolCallParserRegistry:
         """自动检测并解析工具调用"""
         for parser in self.parsers:
             if parser.detect(content):
+                print(f"[DEBUG] Parser {parser.__class__.__name__} detected, parsing...")
                 tool_calls = parser.parse(content)
+                print(f"[DEBUG] Parser {parser.__class__.__name__} returned {len(tool_calls)} tool calls")
                 if tool_calls:
                     return tool_calls
         

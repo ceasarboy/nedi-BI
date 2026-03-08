@@ -47,7 +47,7 @@
 - UI风格切换（现代专业/Bloomberg终端）
 - 主色调自定义
 - 字体大小调整
-- AI模型配置（DeepSeek/OpenAI/智谱AI/硅基流动）
+- AI模型配置（**推荐使用Kimi** / DeepSeek / OpenAI / 智谱AI / 硅基流动）
 - 三层记忆系统管理
 
 ## 技术栈
@@ -72,6 +72,16 @@
 - SQLite（开发环境）
 
 ## 快速开始
+
+### 推荐使用Kimi模型
+
+经过实际测试，**强烈推荐使用 Kimi (Moonshot) 模型**，原因如下：
+- ✅ 工具调用格式规范稳定
+- ✅ 支持标准的 OpenAI function calling API
+- ✅ 中文理解和生成能力强
+- ✅ 响应速度快，可靠性高
+
+配置方法：在系统设置中选择 "硅基流动" 提供商，模型选择 "moonshot-v1-8k" 或 "moonshot-v1-32k"。
 
 ### 环境要求
 - Python 3.8+
@@ -121,8 +131,8 @@ chmod +x scripts/start.sh
 
 ### 访问地址
 - 前端界面: http://localhost:3000
-- 后端API: http://localhost:8000
-- API文档: http://localhost:8000/docs
+- 后端API: http://localhost:8001
+- API文档: http://localhost:8001/docs
 
 ## 功能模块导航
 

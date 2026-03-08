@@ -112,7 +112,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 1601
 在JoyAgent的配置文件中添加：
 
 ```yaml
-mcp_server_url: "http://localhost:8000/mcp"
+mcp_server_url: "http://localhost:8001/mcp"
 ```
 
 ### 2. 可用的MCP工具
@@ -131,10 +131,10 @@ mcp_server_url: "http://localhost:8000/mcp"
 
 ```bash
 # 获取工具列表
-curl http://localhost:8000/api/mcp/tools
+curl http://localhost:8001/api/mcp/tools
 
 # 执行工具
-curl -X POST http://localhost:8000/api/mcp/execute \
+curl -X POST http://localhost:8001/api/mcp/execute \
   -H "Content-Type: application/json" \
   -d '{"tool_name": "pbbi_get_dataflows", "params": {}}'
 ```
